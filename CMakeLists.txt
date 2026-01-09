@@ -17,6 +17,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Gui
     QuickControls2
     Widgets
+    Multimedia
 )
 
 find_package(KF6 REQUIRED COMPONENTS
@@ -28,6 +29,17 @@ find_package(KF6 REQUIRED COMPONENTS
 )
 
 ecm_find_qmlmodule(org.kde.kirigami REQUIRED)
+
+include(FetchContent)
+
+# Fetch whisper.cpp
+FetchContent_Declare(
+    whisper
+    GIT_REPOSITORY https://github.com/ggerganov/whisper.cpp.git
+    GIT_TAG        v1.5.4  # Use stable version
+)
+
+FetchContent_MakeAvailable(whisper)
 
 add_subdirectory(src)
 
