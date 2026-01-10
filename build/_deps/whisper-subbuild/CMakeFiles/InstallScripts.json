@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

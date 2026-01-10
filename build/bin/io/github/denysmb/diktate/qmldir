@@ -1,0 +1,6 @@
+module io.github.denysmb.diktate
+typeinfo diktate.qmltypes
+prefer :/qt/qml/io/github/denysmb/diktate/
+Main 254.0 Main.qml
+depends QtQuick
+

@@ -1,0 +1,165 @@
+{
+	"BUILD_DIR" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/whisper_autogen",
+	"CMAKE_BINARY_DIR" : "/home/denys/Projects/KDE/Diktate/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src",
+	"CMAKE_EXECUTABLE" : "/usr/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/CMakeLists.txt",
+		"/usr/share/cmake/Modules/FindThreads.cmake",
+		"/usr/share/cmake/Modules/CheckLibraryExists.cmake",
+		"/usr/share/cmake/Modules/CheckIncludeFile.cmake",
+		"/usr/share/cmake/Modules/CheckCSourceCompiles.cmake",
+		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
+		"/usr/share/cmake/Modules/FindPackageMessage.cmake",
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/cmake/DefaultTargetOptions.cmake",
+		"/usr/share/cmake/Modules/GNUInstallDirs.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "/home/denys/Projects/KDE/Diktate",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/whisper_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "whisper_autogen/timestamp",
+	"HEADERS" : 
+	[
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-alloc.h",
+			"Mu",
+			"EWIEGA46WW/moc_ggml-alloc.cpp",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-backend.h",
+			"Mu",
+			"EWIEGA46WW/moc_ggml-backend.cpp",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-quants.h",
+			"Mu",
+			"EWIEGA46WW/moc_ggml-quants.cpp",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml.h",
+			"Mu",
+			"EWIEGA46WW/moc_ggml.cpp",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/whisper.h",
+			"Mu",
+			"EWIEGA46WW/moc_whisper.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/whisper_autogen/include",
+	"MOC_COMPILATION_FILE" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/whisper_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"GGML_BUILD",
+		"GGML_SHARED",
+		"QT_NO_CAST_FROM_ASCII",
+		"QT_NO_CAST_FROM_BYTEARRAY",
+		"QT_NO_CAST_TO_ASCII",
+		"QT_NO_FOREACH",
+		"QT_NO_KEYWORDS",
+		"QT_NO_NARROWING_CONVERSIONS_IN_CONNECT",
+		"QT_NO_URL_CAST_FROM_STRING",
+		"QT_STRICT_ITERATORS",
+		"QT_USE_QSTRINGBUILDER",
+		"WHISPER_BUILD",
+		"WHISPER_SHARED",
+		"_GNU_SOURCE",
+		"_LARGEFILE64_SOURCE",
+		"_XOPEN_SOURCE=600",
+		"whisper_EXPORTS"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build",
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src",
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src",
+		"/usr/include/c++/15",
+		"/usr/include/c++/15/x86_64-suse-linux",
+		"/usr/include/c++/15/backward",
+		"/usr/lib64/gcc/x86_64-suse-linux/15/include",
+		"/usr/local/include",
+		"/usr/lib64/gcc/x86_64-suse-linux/15/include-fixed",
+		"/usr/x86_64-suse-linux/include",
+		"/usr/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS",
+		"K_PLUGIN_FACTORY",
+		"K_PLUGIN_CLASS",
+		"K_PLUGIN_FACTORY_WITH_JSON",
+		"K_PLUGIN_CLASS_WITH_JSON"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/c++",
+		"-std=c++17",
+		"-w",
+		"-dM",
+		"-E",
+		"/usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/whisper_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 8,
+	"PARSE_CACHE_FILE" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/CMakeFiles/whisper_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/usr/libexec/qt6/moc",
+	"QT_UIC_EXECUTABLE" : "",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 10,
+	"SETTINGS_FILE" : "/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/CMakeFiles/whisper_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-alloc.c",
+			"Mu",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-backend.c",
+			"Mu",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml-quants.c",
+			"Mu",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/ggml.c",
+			"Mu",
+			null
+		],
+		[
+			"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-src/whisper.cpp",
+			"Mu",
+			null
+		]
+	],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

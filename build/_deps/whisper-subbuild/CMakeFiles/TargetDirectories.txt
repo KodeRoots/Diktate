@@ -1,0 +1,3 @@
+/home/denys/Projects/KDE/Diktate/build/_deps/whisper-subbuild/CMakeFiles/whisper-populate.dir
+/home/denys/Projects/KDE/Diktate/build/_deps/whisper-subbuild/CMakeFiles/edit_cache.dir
+/home/denys/Projects/KDE/Diktate/build/_deps/whisper-subbuild/CMakeFiles/rebuild_cache.dir

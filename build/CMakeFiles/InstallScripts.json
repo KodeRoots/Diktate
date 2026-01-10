@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/denys/Projects/KDE/Diktate/build/cmake_install.cmake",
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/cmake_install.cmake",
+		"/home/denys/Projects/KDE/Diktate/build/_deps/whisper-build/bindings/cmake_install.cmake",
+		"/home/denys/Projects/KDE/Diktate/build/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

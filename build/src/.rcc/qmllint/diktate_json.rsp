@@ -1,0 +1,16 @@
+--bare
+-I
+/usr/lib64/qt6/qml
+-I
+/home/denys/Projects/KDE/Diktate/build/src
+-I
+/home/denys/Projects/KDE/Diktate/build/bin
+-I
+/usr/lib64/qt6/qml
+--resource
+/home/denys/Projects/KDE/Diktate/build/src/.qt/rcc/qmake_io_github_denysmb_diktate.qrc
+--resource
+/home/denys/Projects/KDE/Diktate/build/src/.qt/rcc/diktate_raw_qml_0.qrc
+/home/denys/Projects/KDE/Diktate/src/qml/Main.qml
+--json
+/home/denys/Projects/KDE/Diktate/build/diktate_qmllint.json

@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "../bin/diktate"
+  "../bin/diktate.pdb"
+  "../bin/io/github/denysmb/diktate/diktate.qmltypes"
+  ".qt/rcc/qrc_diktate_raw_qml_0.cpp"
+  ".qt/rcc/qrc_qmake_io_github_denysmb_diktate.cpp"
+  ".rcc/qmlcache/diktate_qml/Main_qml.cpp"
+  ".rcc/qmlcache/diktate_qmlcache_loader.cpp"
+  "CMakeFiles/diktate_autogen.dir/AutogenUsed.txt"
+  "CMakeFiles/diktate_autogen.dir/ParseCache.txt"
+  "diktate_autogen"
+  "CMakeFiles/diktate.dir/.qt/rcc/qrc_diktate_raw_qml_0.cpp.o"
+  "CMakeFiles/diktate.dir/.qt/rcc/qrc_diktate_raw_qml_0.cpp.o.d"
+  "CMakeFiles/diktate.dir/.qt/rcc/qrc_qmake_io_github_denysmb_diktate.cpp.o"
+  "CMakeFiles/diktate.dir/.qt/rcc/qrc_qmake_io_github_denysmb_diktate.cpp.o.d"
+  "CMakeFiles/diktate.dir/.rcc/qmlcache/diktate_qml/Main_qml.cpp.o"
+  "CMakeFiles/diktate.dir/.rcc/qmlcache/diktate_qml/Main_qml.cpp.o.d"
+  "CMakeFiles/diktate.dir/.rcc/qmlcache/diktate_qmlcache_loader.cpp.o"
+  "CMakeFiles/diktate.dir/.rcc/qmlcache/diktate_qmlcache_loader.cpp.o.d"
+  "CMakeFiles/diktate.dir/audiorecorder.cpp.o"
+  "CMakeFiles/diktate.dir/audiorecorder.cpp.o.d"
+  "CMakeFiles/diktate.dir/diktate_autogen/mocs_compilation.cpp.o"
+  "CMakeFiles/diktate.dir/diktate_autogen/mocs_compilation.cpp.o.d"
+  "CMakeFiles/diktate.dir/diktate_qmltyperegistrations.cpp.o"
+  "CMakeFiles/diktate.dir/diktate_qmltyperegistrations.cpp.o.d"
+  "CMakeFiles/diktate.dir/main.cpp.o"
+  "CMakeFiles/diktate.dir/main.cpp.o.d"
+  "CMakeFiles/diktate.dir/whispertranscriber.cpp.o"
+  "CMakeFiles/diktate.dir/whispertranscriber.cpp.o.d"
+  "diktate_qmltyperegistrations.cpp"
+  "meta_types/diktate_json_file_list.txt"
+  "meta_types/diktate_json_file_list.txt.timestamp"
+  "meta_types/qt6diktate_metatypes.json"
+  "meta_types/qt6diktate_metatypes.json.gen"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/diktate.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

@@ -1,0 +1,5 @@
+--resource
+/home/denys/Projects/KDE/Diktate/build/src/.qt/rcc/qmake_io_github_denysmb_diktate.qrc
+--resource
+/home/denys/Projects/KDE/Diktate/build/src/.qt/rcc/diktate_raw_qml_0.qrc
+/qt/qml/io/github/denysmb/diktate/Main.qml
