@@ -46,6 +46,7 @@ Kirigami.ApplicationWindow {
                 page.tempFilePath = filePath
                 recordAction.text = i18n("Transcribing...")
                 recordAction.enabled = false
+                textArea.placeholderText = i18n("Transcribing...")
                 transcriber.transcribe(filePath)
             }
 
@@ -61,17 +62,20 @@ Kirigami.ApplicationWindow {
             target: transcriber
             function onTranscriptionComplete(text) {
                 textArea.text = text
+                textArea.placeholderText = i18n("Press Record to start...")
                 recordAction.text = i18n("Record")
                 recordAction.enabled = true
+                successMessage.text = i18n("Transcription complete")
                 successMessage.visible = true
                 successMessageTimer.restart()
             }
 
             function onTranscriptionProgress(status) {
-                statusLabel.text = status
+                textArea.placeholderText = status
             }
 
             function onErrorOccurred(message) {
+                textArea.placeholderText = i18n("Press Record to start...")
                 errorInlineMessage.text = message
                 errorInlineMessage.visible = true
                 recordAction.text = i18n("Record")
@@ -79,45 +83,10 @@ Kirigami.ApplicationWindow {
             }
         }
 
+        // Main content
         ColumnLayout {
             anchors.fill: parent
             spacing: Kirigami.Units.mediumSpacing
-
-            Kirigami.InlineMessage {
-                id: errorInlineMessage
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Error
-                visible: false
-
-                Connections {
-                    target: audioRecorder
-                    function onRecordingStarted() {
-                        errorInlineMessage.visible = false
-                    }
-                }
-            }
-
-            Kirigami.InlineMessage {
-                id: successMessage
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Positive
-                text: i18n("Text copied")
-                visible: false
-
-                Timer {
-                    id: successMessageTimer
-                    interval: 2000
-                    onTriggered: successMessage.visible = false
-                }
-            }
-
-            Controls.Label {
-                id: statusLabel
-                Layout.alignment: Qt.AlignHCenter
-                text: i18n("Press Record to start...")
-                font.italic: true
-                color: Kirigami.Theme.disabledTextColor
-            }
 
             Controls.ScrollView {
                 Layout.fillWidth: true
@@ -126,7 +95,7 @@ Kirigami.ApplicationWindow {
 
                 Controls.TextArea {
                     id: textArea
-                    placeholderText: i18n("Transcribed text will appear here...")
+                    placeholderText: i18n("Press Record to start...")
                     wrapMode: Controls.TextArea.Wrap
                     selectByMouse: true
 
@@ -158,6 +127,46 @@ Kirigami.ApplicationWindow {
                             successMessageTimer.restart()
                         }
                     }
+                }
+            }
+        }
+
+        // Floating notifications overlay
+        ColumnLayout {
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+                margins: Kirigami.Units.largeSpacing
+            }
+            spacing: Kirigami.Units.smallSpacing
+            z: 1
+
+            Kirigami.InlineMessage {
+                id: errorInlineMessage
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Error
+                visible: false
+
+                Connections {
+                    target: audioRecorder
+                    function onRecordingStarted() {
+                        errorInlineMessage.visible = false
+                    }
+                }
+            }
+
+            Kirigami.InlineMessage {
+                id: successMessage
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Positive
+                text: i18n("Text copied")
+                visible: false
+
+                Timer {
+                    id: successMessageTimer
+                    interval: 2000
+                    onTriggered: successMessage.visible = false
                 }
             }
         }
