@@ -39,67 +39,67 @@ Kirigami.ApplicationWindow {
         Connections {
             target: audioRecorder
             function onRecordingStarted() {
-                recordAction.text = i18n("Recording...")
-                recordAction.enabled = false
+                recordAction.text = i18n("Recording...");
+                recordAction.enabled = false;
             }
 
             function onRecordingFinished(filePath) {
-                page.tempFilePath = filePath
-                recordAction.text = i18n("Transcribing...")
-                recordAction.enabled = false
-                textArea.placeholderText = i18n("Transcribing...")
-                transcriber.transcribe(filePath)
+                page.tempFilePath = filePath;
+                recordAction.text = i18n("Transcribing...");
+                recordAction.enabled = false;
+                textArea.placeholderText = i18n("Transcribing...");
+                transcriber.transcribe(filePath);
             }
 
             function onErrorOccurred(message) {
-                errorInlineMessage.text = message
-                errorInlineMessage.visible = true
-                recordAction.text = i18n("Record")
-                recordAction.enabled = transcriber.isModelLoaded()
+                errorInlineMessage.text = message;
+                errorInlineMessage.visible = true;
+                recordAction.text = i18n("Record");
+                recordAction.enabled = transcriber.isModelLoaded();
             }
         }
 
         Connections {
             target: transcriber
             function onTranscriptionComplete(text) {
-                textArea.text = text
-                textArea.placeholderText = i18n("Press Record to start...")
-                recordAction.text = i18n("Record")
-                recordAction.enabled = true
-                successMessage.text = i18n("Transcription complete")
-                successMessage.visible = true
-                successMessageTimer.restart()
+                textArea.text = text;
+                textArea.placeholderText = i18n("Press Record to start...");
+                recordAction.text = i18n("Record");
+                recordAction.enabled = true;
+                successMessage.text = i18n("Transcription complete");
+                successMessage.visible = true;
+                successMessageTimer.restart();
             }
 
             function onTranscriptionProgress(status) {
-                textArea.placeholderText = status
+                textArea.placeholderText = status;
             }
 
             function onErrorOccurred(message) {
-                textArea.placeholderText = i18n("Press Record to start...")
-                errorInlineMessage.text = message
-                errorInlineMessage.visible = true
-                recordAction.text = i18n("Record")
-                recordAction.enabled = transcriber.isModelLoaded()
+                textArea.placeholderText = i18n("Press Record to start...");
+                errorInlineMessage.text = message;
+                errorInlineMessage.visible = true;
+                recordAction.text = i18n("Record");
+                recordAction.enabled = transcriber.isModelLoaded();
             }
 
             function onModelLoaded(modelPath) {
-                recordAction.enabled = true
-                textArea.placeholderText = i18n("Press Record to start...")
+                recordAction.enabled = true;
+                textArea.placeholderText = i18n("Press Record to start...");
             }
         }
 
         Connections {
             target: modelManager
             function onDownloadComplete() {
-                successMessage.text = i18n("Model downloaded successfully")
-                successMessage.visible = true
-                successMessageTimer.restart()
+                successMessage.text = i18n("Model downloaded successfully");
+                successMessage.visible = true;
+                successMessageTimer.restart();
             }
 
             function onDownloadError(message) {
-                errorInlineMessage.text = message
-                errorInlineMessage.visible = true
+                errorInlineMessage.text = message;
+                errorInlineMessage.visible = true;
             }
         }
 
@@ -121,17 +121,12 @@ Kirigami.ApplicationWindow {
 
                 Controls.ComboBox {
                     id: modelSizeCombo
-                    model: [
-                        i18n("Tiny"),
-                        i18n("Base"),
-                        i18n("Small"),
-                        i18n("Medium"),
-                        i18n("Large")
-                    ]
+                    Layout.fillWidth: true
+                    model: [i18n("Tiny"), i18n("Base"), i18n("Small"), i18n("Medium"), i18n("Large")]
                     currentIndex: modelManager.modelSize
                     enabled: !modelManager.isDownloading
-                    onActivated: function(index) {
-                        modelManager.modelSize = index
+                    onActivated: function (index) {
+                        modelManager.modelSize = index;
                     }
                 }
 
@@ -141,14 +136,12 @@ Kirigami.ApplicationWindow {
 
                 Controls.ComboBox {
                     id: languageCombo
-                    model: [
-                        i18n("English"),
-                        i18n("Multilingual")
-                    ]
+                    Layout.fillWidth: true
+                    model: [i18n("English"), i18n("Multilingual")]
                     currentIndex: modelManager.modelLanguage
                     enabled: !modelManager.isDownloading && modelManager.modelSize !== 4  // Large has no English-only
-                    onActivated: function(index) {
-                        modelManager.modelLanguage = index
+                    onActivated: function (index) {
+                        modelManager.modelLanguage = index;
                     }
                 }
 
@@ -167,12 +160,9 @@ Kirigami.ApplicationWindow {
                 visible: !modelManager.isCurrentModelAvailable || modelManager.isDownloading
                 text: {
                     if (modelManager.isDownloading) {
-                        return i18n("Downloading %1... %2%",
-                            modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage),
-                            Math.round(modelManager.downloadProgress))
+                        return i18n("Downloading %1... %2%", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage), Math.round(modelManager.downloadProgress));
                     } else {
-                        return i18n("Model %1 is not installed",
-                            modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage))
+                        return i18n("Model %1 is not installed", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage));
                     }
                 }
 
@@ -182,9 +172,9 @@ Kirigami.ApplicationWindow {
                         icon.name: modelManager.isDownloading ? "dialog-cancel" : "download"
                         onTriggered: {
                             if (modelManager.isDownloading) {
-                                modelManager.cancelDownload()
+                                modelManager.cancelDownload();
                             } else {
-                                modelManager.downloadCurrentModel()
+                                modelManager.downloadCurrentModel();
                             }
                         }
                     }
@@ -223,12 +213,12 @@ Kirigami.ApplicationWindow {
                         Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
 
                         onClicked: {
-                            textArea.selectAll()
-                            textArea.copy()
-                            textArea.deselect()
-                            successMessage.text = i18n("Copied to clipboard")
-                            successMessage.visible = true
-                            successMessageTimer.restart()
+                            textArea.selectAll();
+                            textArea.copy();
+                            textArea.deselect();
+                            successMessage.text = i18n("Copied to clipboard");
+                            successMessage.visible = true;
+                            successMessageTimer.restart();
                         }
                     }
                 }
@@ -255,7 +245,7 @@ Kirigami.ApplicationWindow {
                 Connections {
                     target: audioRecorder
                     function onRecordingStarted() {
-                        errorInlineMessage.visible = false
+                        errorInlineMessage.visible = false;
                     }
                 }
             }
