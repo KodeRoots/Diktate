@@ -1,2 +1,0 @@
-/home/denys/Projects/KDE/Diktate/build/src/diktate_autogen/include/../EWIEGA46WW/moc_audiorecorder.cpp.json
-/home/denys/Projects/KDE/Diktate/build/src/diktate_autogen/include/../EWIEGA46WW/moc_whispertranscriber.cpp.json

@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/qt/qml/io/github/denysmb/diktate/">
-    <file alias="Main.qml">/home/denys/Projects/KDE/Diktate/src/qml/Main.qml</file>
-  </qresource>
-</RCC>
-
