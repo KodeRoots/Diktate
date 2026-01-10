@@ -6,8 +6,6 @@ import org.kde.kirigami as Kirigami
 Kirigami.ApplicationWindow {
     id: root
 
-    property string tempFilePath: ""
-
     width: 600
     height: 400
 
@@ -16,8 +14,12 @@ Kirigami.ApplicationWindow {
     pageStack.initialPage: Kirigami.Page {
         id: page
 
+        title: i18n("Diktate")
+
         Layout.fillWidth: true
         Layout.fillHeight: true
+
+        property string tempFilePath: ""
 
         actions: Kirigami.Action {
             id: recordAction
@@ -41,7 +43,7 @@ Kirigami.ApplicationWindow {
             }
 
             function onRecordingFinished(filePath) {
-                tempFilePath = filePath
+                page.tempFilePath = filePath
                 recordAction.text = i18n("Transcribing...")
                 recordAction.enabled = false
                 transcriber.transcribe(filePath)
@@ -79,7 +81,7 @@ Kirigami.ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 10
+            spacing: Kirigami.Units.mediumSpacing
 
             Kirigami.InlineMessage {
                 id: errorInlineMessage
@@ -120,7 +122,7 @@ Kirigami.ApplicationWindow {
             Controls.ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.margins: 10
+                Layout.margins: Kirigami.Units.largeSpacing
 
                 Controls.TextArea {
                     id: textArea
@@ -128,26 +130,32 @@ Kirigami.ApplicationWindow {
                     wrapMode: Controls.TextArea.Wrap
                     selectByMouse: true
 
-                    MouseArea {
-                        anchors.fill: parent
-                        propagateComposedEvents: true
-                        hoverEnabled: true
+                    HoverHandler {
+                        id: textAreaHover
+                    }
 
-                        Controls.Button {
-                            anchors {
-                                top: parent.top
-                                right: parent.right
-                                margins: 10
-                            }
-                            text: i18n("Copy")
-                            visible: parent.containsMouse
-                            onClicked: {
-                                textArea.selectAll()
-                                textArea.copy()
-                                textArea.deselect()
-                                successMessage.visible = true
-                                successMessageTimer.restart()
-                            }
+                    Controls.ToolButton {
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            margins: Kirigami.Units.smallSpacing
+                        }
+                        icon.name: "edit-copy"
+                        text: i18n("Copy")
+                        display: Controls.AbstractButton.IconOnly
+                        visible: textAreaHover.hovered && textArea.text.length > 0
+
+                        Controls.ToolTip.text: text
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+
+                        onClicked: {
+                            textArea.selectAll()
+                            textArea.copy()
+                            textArea.deselect()
+                            successMessage.text = i18n("Copied to clipboard")
+                            successMessage.visible = true
+                            successMessageTimer.restart()
                         }
                     }
                 }
