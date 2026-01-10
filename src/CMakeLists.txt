@@ -28,10 +28,11 @@ target_link_libraries(diktate
     Qt6::QuickControls2
     Qt6::Widgets
     Qt6::Multimedia
+    Qt6::Concurrent
     KF6::I18n
     KF6::CoreAddons
     KF6::IconThemes
-    whisper::whisper
+    whisper
 )
 
 install(TARGETS diktate ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

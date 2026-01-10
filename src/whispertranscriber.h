@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QString>
 #include <QThread>
+#include <QMutex>
+
+#include <whisper.h>
 
 class WhisperTranscriber : public QObject
 {
@@ -23,6 +26,7 @@ Q_SIGNALS:
 
 private:
     struct whisper_context *m_ctx = nullptr;
+    QMutex m_mutex;
     bool m_modelLoaded = false;
     QString loadModel();
     void runTranscription(const QString &audioPath);

@@ -18,6 +18,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     QuickControls2
     Widgets
     Multimedia
+    Concurrent
 )
 
 find_package(KF6 REQUIRED COMPONENTS
