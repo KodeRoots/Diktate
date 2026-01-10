@@ -31,48 +31,49 @@ Kirigami.ApplicationWindow {
                     audioRecorder.startRecording();
                 }
             }
+        }
 
-            Connections {
-                target: audioRecorder
-                function onRecordingStarted() {
-                    recordAction.text = i18n("Recording...")
-                    recordAction.enabled = false
-                }
-
-                function onRecordingFinished(filePath) {
-                    tempFilePath = filePath
-                    recordAction.text = i18n("Transcribing...")
-                    recordAction.enabled = false
-                }
-
-                function onErrorOccurred(message) {
-                    errorInlineMessage.text = message
-                    errorInlineMessage.visible = true
-                    recordAction.text = i18n("Record")
-                    recordAction.enabled = true
-                }
+        Connections {
+            target: audioRecorder
+            function onRecordingStarted() {
+                recordAction.text = i18n("Recording...")
+                recordAction.enabled = false
             }
 
-            Connections {
-                target: transcriber
-                function onTranscriptionComplete(text) {
-                    textArea.text = text
-                    recordAction.text = i18n("Record")
-                    recordAction.enabled = true
-                    successMessage.visible = true
-                    successMessageTimer.restart()
-                }
+            function onRecordingFinished(filePath) {
+                tempFilePath = filePath
+                recordAction.text = i18n("Transcribing...")
+                recordAction.enabled = false
+                transcriber.transcribe(filePath)
+            }
 
-                function onTranscriptionProgress(status) {
-                    statusLabel.text = status
-                }
+            function onErrorOccurred(message) {
+                errorInlineMessage.text = message
+                errorInlineMessage.visible = true
+                recordAction.text = i18n("Record")
+                recordAction.enabled = true
+            }
+        }
 
-                function onErrorOccurred(message) {
-                    errorInlineMessage.text = message
-                    errorInlineMessage.visible = true
-                    recordAction.text = i18n("Record")
-                    recordAction.enabled = true
-                }
+        Connections {
+            target: transcriber
+            function onTranscriptionComplete(text) {
+                textArea.text = text
+                recordAction.text = i18n("Record")
+                recordAction.enabled = true
+                successMessage.visible = true
+                successMessageTimer.restart()
+            }
+
+            function onTranscriptionProgress(status) {
+                statusLabel.text = status
+            }
+
+            function onErrorOccurred(message) {
+                errorInlineMessage.text = message
+                errorInlineMessage.visible = true
+                recordAction.text = i18n("Record")
+                recordAction.enabled = true
             }
         }
 
@@ -124,7 +125,7 @@ Kirigami.ApplicationWindow {
                 Controls.TextArea {
                     id: textArea
                     placeholderText: i18n("Transcribed text will appear here...")
-                    wrapMode: TextArea.Wrap
+                    wrapMode: Controls.TextArea.Wrap
                     selectByMouse: true
 
                     MouseArea {

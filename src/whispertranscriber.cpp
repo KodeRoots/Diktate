@@ -73,6 +73,15 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
             return;
         }
 
+        // Convert Int16 samples to normalized float [-1.0, 1.0]
+        const qint16 *samples = reinterpret_cast<const qint16 *>(audioData.constData());
+        int sampleCount = audioData.size() / sizeof(qint16);
+
+        std::vector<float> floatSamples(sampleCount);
+        for (int i = 0; i < sampleCount; ++i) {
+            floatSamples[i] = static_cast<float>(samples[i]) / 32768.0f;
+        }
+
         struct whisper_context *ctx;
         {
             QMutexLocker locker(&m_mutex);
@@ -92,9 +101,7 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
         params.language = "en";
         params.n_threads = 4;
 
-        if (whisper_full(ctx, params,
-                         reinterpret_cast<const float*>(audioData.constData()),
-                         audioData.size() / sizeof(float)) != 0) {
+        if (whisper_full(ctx, params, floatSamples.data(), sampleCount) != 0) {
             Q_EMIT errorOccurred(i18n("Failed to transcribe audio"));
             return;
         }
@@ -105,6 +112,9 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
             const char *text = whisper_full_get_segment_text(ctx, i);
             result += QString::fromUtf8(text);
         }
+
+        // Remove Whisper special tokens
+        result.remove(QStringLiteral("[BLANK_AUDIO]"));
 
         Q_EMIT transcriptionComplete(result.trimmed());
     });
