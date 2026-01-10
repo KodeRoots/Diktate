@@ -10,9 +10,11 @@ target_sources(diktate
     main.cpp
     audiorecorder.cpp
     whispertranscriber.cpp
+    modelmanager.cpp
 
     audiorecorder.h
     whispertranscriber.h
+    modelmanager.h
 )
 
 ecm_target_qml_sources(diktate
@@ -29,6 +31,7 @@ target_link_libraries(diktate
     Qt6::Widgets
     Qt6::Multimedia
     Qt6::Concurrent
+    Qt6::Network
     KF6::I18n
     KF6::CoreAddons
     KF6::IconThemes

@@ -25,6 +25,7 @@ Kirigami.ApplicationWindow {
             id: recordAction
             text: i18n("Record")
             icon.name: "media-record"
+            enabled: transcriber.isModelLoaded()
             onTriggered: {
                 if (audioRecorder.isRecording()) {
                     audioRecorder.stopRecording();
@@ -54,7 +55,7 @@ Kirigami.ApplicationWindow {
                 errorInlineMessage.text = message
                 errorInlineMessage.visible = true
                 recordAction.text = i18n("Record")
-                recordAction.enabled = true
+                recordAction.enabled = transcriber.isModelLoaded()
             }
         }
 
@@ -79,7 +80,26 @@ Kirigami.ApplicationWindow {
                 errorInlineMessage.text = message
                 errorInlineMessage.visible = true
                 recordAction.text = i18n("Record")
+                recordAction.enabled = transcriber.isModelLoaded()
+            }
+
+            function onModelLoaded(modelPath) {
                 recordAction.enabled = true
+                textArea.placeholderText = i18n("Press Record to start...")
+            }
+        }
+
+        Connections {
+            target: modelManager
+            function onDownloadComplete() {
+                successMessage.text = i18n("Model downloaded successfully")
+                successMessage.visible = true
+                successMessageTimer.restart()
+            }
+
+            function onDownloadError(message) {
+                errorInlineMessage.text = message
+                errorInlineMessage.visible = true
             }
         }
 
@@ -88,14 +108,98 @@ Kirigami.ApplicationWindow {
             anchors.fill: parent
             spacing: Kirigami.Units.mediumSpacing
 
+            // Model selection row
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: Kirigami.Units.largeSpacing
+                Layout.bottomMargin: 0
+                spacing: Kirigami.Units.mediumSpacing
+
+                Controls.Label {
+                    text: i18n("Model:")
+                }
+
+                Controls.ComboBox {
+                    id: modelSizeCombo
+                    model: [
+                        i18n("Tiny"),
+                        i18n("Base"),
+                        i18n("Small"),
+                        i18n("Medium"),
+                        i18n("Large")
+                    ]
+                    currentIndex: modelManager.modelSize
+                    enabled: !modelManager.isDownloading
+                    onActivated: function(index) {
+                        modelManager.modelSize = index
+                    }
+                }
+
+                Controls.Label {
+                    text: i18n("Language:")
+                }
+
+                Controls.ComboBox {
+                    id: languageCombo
+                    model: [
+                        i18n("English"),
+                        i18n("Multilingual")
+                    ]
+                    currentIndex: modelManager.modelLanguage
+                    enabled: !modelManager.isDownloading && modelManager.modelSize !== 4  // Large has no English-only
+                    onActivated: function(index) {
+                        modelManager.modelLanguage = index
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+            }
+
+            // Download prompt message
+            Kirigami.InlineMessage {
+                id: downloadPromptMessage
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.largeSpacing
+                Layout.rightMargin: Kirigami.Units.largeSpacing
+                type: Kirigami.MessageType.Information
+                visible: !modelManager.isCurrentModelAvailable || modelManager.isDownloading
+                text: {
+                    if (modelManager.isDownloading) {
+                        return i18n("Downloading %1... %2%",
+                            modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage),
+                            Math.round(modelManager.downloadProgress))
+                    } else {
+                        return i18n("Model %1 is not installed",
+                            modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage))
+                    }
+                }
+
+                actions: [
+                    Kirigami.Action {
+                        text: modelManager.isDownloading ? i18n("Cancel") : i18n("Download and Install")
+                        icon.name: modelManager.isDownloading ? "dialog-cancel" : "download"
+                        onTriggered: {
+                            if (modelManager.isDownloading) {
+                                modelManager.cancelDownload()
+                            } else {
+                                modelManager.downloadCurrentModel()
+                            }
+                        }
+                    }
+                ]
+            }
+
             Controls.ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.margins: Kirigami.Units.largeSpacing
+                Layout.topMargin: downloadPromptMessage.visible ? 0 : Kirigami.Units.largeSpacing
 
                 Controls.TextArea {
                     id: textArea
-                    placeholderText: i18n("Press Record to start...")
+                    placeholderText: transcriber.isModelLoaded() ? i18n("Press Record to start...") : i18n("Select and download a model to start")
                     wrapMode: Controls.TextArea.Wrap
                     selectByMouse: true
 

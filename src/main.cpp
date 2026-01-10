@@ -9,6 +9,7 @@
 
 #include "audiorecorder.h"
 #include "whispertranscriber.h"
+#include "modelmanager.h"
 
 int main(int argc, char *argv[])
 {
@@ -35,6 +36,18 @@ int main(int argc, char *argv[])
 
     WhisperTranscriber transcriber;
     engine.rootContext()->setContextProperty(QStringLiteral("transcriber"), &transcriber);
+
+    ModelManager modelManager;
+    engine.rootContext()->setContextProperty(QStringLiteral("modelManager"), &modelManager);
+
+    // Connect ModelManager signals to WhisperTranscriber
+    QObject::connect(&modelManager, &ModelManager::modelChanged,
+                     &transcriber, &WhisperTranscriber::loadModel);
+
+    // Auto-load model if available on startup
+    if (modelManager.isCurrentModelAvailable()) {
+        transcriber.loadModel(modelManager.currentModelPath());
+    }
 
     engine.loadFromModule("io.github.denysmb.diktate", "Main");
 

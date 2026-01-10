@@ -9,7 +9,6 @@
 WhisperTranscriber::WhisperTranscriber(QObject *parent)
     : QObject(parent)
 {
-    loadModel();
 }
 
 WhisperTranscriber::~WhisperTranscriber()
@@ -21,38 +20,62 @@ WhisperTranscriber::~WhisperTranscriber()
     }
 }
 
-QString WhisperTranscriber::loadModel()
+void WhisperTranscriber::loadModel(const QString &modelPath)
 {
-    QString modelPath = QDir::homePath() + QStringLiteral("/.local/share/diktate/ggml-tiny.en.bin");
-    QDir dir(QDir::homePath() + QStringLiteral("/.local/share/diktate"));
-    if (!dir.exists()) {
-        dir.mkpath(QStringLiteral("."));
+    if (modelPath.isEmpty()) {
+        return;
     }
 
     if (!QFile::exists(modelPath)) {
-        Q_EMIT errorOccurred(i18n("Whisper model not found at: %1\nPlease download from https://huggingface.co/ggerganov/whisper.cpp").arg(modelPath));
-        return QString();
+        Q_EMIT errorOccurred(i18n("Model file not found: %1", modelPath));
+        return;
+    }
+
+    // If already loading the same model, skip
+    if (m_modelLoaded && m_currentModelPath == modelPath) {
+        return;
+    }
+
+    Q_EMIT transcriptionProgress(i18n("Loading model..."));
+
+    // Free existing context if any
+    {
+        QMutexLocker locker(&m_mutex);
+        if (m_ctx) {
+            whisper_free(m_ctx);
+            m_ctx = nullptr;
+        }
+        m_modelLoaded = false;
     }
 
     struct whisper_context_params params = whisper_context_default_params();
+    struct whisper_context *newCtx = whisper_init_from_file_with_params(modelPath.toUtf8().constData(), params);
+
+    if (!newCtx) {
+        Q_EMIT errorOccurred(i18n("Failed to load Whisper model: %1", modelPath));
+        return;
+    }
+
     {
         QMutexLocker locker(&m_mutex);
-        m_ctx = whisper_init_from_file_with_params(modelPath.toUtf8().constData(), params);
+        m_ctx = newCtx;
+        m_modelLoaded = true;
+        m_currentModelPath = modelPath;
     }
 
-    if (!m_ctx) {
-        Q_EMIT errorOccurred(i18n("Failed to load Whisper model"));
-        return QString();
-    }
+    Q_EMIT modelLoaded(modelPath);
+    Q_EMIT transcriptionProgress(i18n("Model loaded"));
+}
 
-    m_modelLoaded = true;
-    return modelPath;
+QString WhisperTranscriber::currentModelPath() const
+{
+    return m_currentModelPath;
 }
 
 void WhisperTranscriber::transcribe(const QString &audioPath)
 {
     if (!m_modelLoaded) {
-        Q_EMIT errorOccurred(i18n("Whisper model not loaded"));
+        Q_EMIT errorOccurred(i18n("No model loaded. Please select and download a model first."));
         return;
     }
 
@@ -98,7 +121,7 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
         params.print_special = false;
         params.print_realtime = false;
         params.translate = false;
-        params.language = "en";
+        params.language = "auto";  // Use auto-detect for multilingual support
         params.n_threads = 4;
 
         if (whisper_full(ctx, params, floatSamples.data(), sampleCount) != 0) {
