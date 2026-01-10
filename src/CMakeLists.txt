@@ -9,8 +9,10 @@ target_sources(diktate
     PRIVATE
     main.cpp
     audiorecorder.cpp
+    whispertranscriber.cpp
 
     audiorecorder.h
+    whispertranscriber.h
 )
 
 ecm_target_qml_sources(diktate
@@ -29,6 +31,7 @@ target_link_libraries(diktate
     KF6::I18n
     KF6::CoreAddons
     KF6::IconThemes
+    whisper::whisper
 )
 
 install(TARGETS diktate ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
