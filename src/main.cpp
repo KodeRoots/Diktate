@@ -7,6 +7,9 @@
 #include <KLocalizedString>
 #include <KIconTheme>
 
+#include "audiorecorder.h"
+#include "whispertranscriber.h"
+
 int main(int argc, char *argv[])
 {
     KIconTheme::initTheme();
@@ -25,6 +28,14 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
+
+    // Expose backend classes to QML
+    AudioRecorder audioRecorder;
+    engine.rootContext()->setContextProperty(QStringLiteral("audioRecorder"), &audioRecorder);
+
+    WhisperTranscriber transcriber;
+    engine.rootContext()->setContextProperty(QStringLiteral("transcriber"), &transcriber);
+
     engine.loadFromModule("io.github.denysmb.diktate", "Main");
 
     if (engine.rootObjects().isEmpty()) {
