@@ -33,11 +33,41 @@ ecm_find_qmlmodule(org.kde.kirigami REQUIRED)
 
 include(FetchContent)
 
+# GPU acceleration options for whisper.cpp
+option(DIKTATE_CUDA "Enable CUDA GPU acceleration (NVIDIA)" OFF)
+option(DIKTATE_VULKAN "Enable Vulkan GPU acceleration" OFF)
+option(DIKTATE_OPENBLAS "Enable OpenBLAS for optimized CPU inference" ON)
+
+# Configure whisper.cpp build options before fetching
+if(DIKTATE_CUDA)
+    set(GGML_CUDA ON CACHE BOOL "" FORCE)
+    message(STATUS "Diktate: CUDA GPU acceleration enabled")
+endif()
+
+if(DIKTATE_VULKAN)
+    set(GGML_VULKAN ON CACHE BOOL "" FORCE)
+    message(STATUS "Diktate: Vulkan GPU acceleration enabled")
+endif()
+
+if(DIKTATE_OPENBLAS)
+    set(GGML_BLAS ON CACHE BOOL "" FORCE)
+    set(GGML_BLAS_VENDOR "OpenBLAS" CACHE STRING "" FORCE)
+    message(STATUS "Diktate: OpenBLAS CPU optimization enabled")
+endif()
+
+# Disable -Werror for whisper.cpp build (it has some -Wundef warnings)
+set(GGML_FATAL_WARNINGS OFF CACHE BOOL "" FORCE)
+
+# Remove -Werror=undef from compile flags for whisper.cpp compatibility
+# KDE's strict compiler settings conflict with whisper.cpp's preprocessor conditionals
+string(REPLACE "-Werror=undef" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 # Fetch whisper.cpp
 FetchContent_Declare(
     whisper
     GIT_REPOSITORY https://github.com/ggerganov/whisper.cpp.git
-    GIT_TAG        v1.5.4  # Use stable version
+    GIT_TAG        v1.7.3  # Updated version with Flash Attention and better performance
 )
 
 FetchContent_MakeAvailable(whisper)

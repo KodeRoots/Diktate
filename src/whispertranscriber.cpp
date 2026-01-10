@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QtConcurrent>
 #include <KLocalizedString>
+#include <thread>
+#include <algorithm>
 
 WhisperTranscriber::WhisperTranscriber(QObject *parent)
     : QObject(parent)
@@ -49,6 +51,8 @@ void WhisperTranscriber::loadModel(const QString &modelPath)
     }
 
     struct whisper_context_params params = whisper_context_default_params();
+    params.use_gpu = true;  // Enable GPU acceleration if available
+    params.flash_attn = true;  // Enable Flash Attention for better performance
     struct whisper_context *newCtx = whisper_init_from_file_with_params(modelPath.toUtf8().constData(), params);
 
     if (!newCtx) {
@@ -122,7 +126,22 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
         params.print_realtime = false;
         params.translate = false;
         params.language = "auto";  // Use auto-detect for multilingual support
-        params.n_threads = 4;
+
+        // Dynamic thread count: use all available cores minus one for responsiveness
+        const int maxThreads = static_cast<int>(std::thread::hardware_concurrency());
+        params.n_threads = std::max(1, maxThreads > 1 ? maxThreads - 1 : maxThreads);
+
+        // Dynamic audio context optimization for short clips (from whisper.cpp issue #1855)
+        // This significantly speeds up transcription of short recordings
+        constexpr int sampleRate = 16000;
+        constexpr int maxAudioCtx = 1500;
+        const int dynamicAudioCtx = std::min(maxAudioCtx,
+            ((maxAudioCtx * sampleCount) / (sampleRate * 30)) + 128);
+        params.audio_ctx = dynamicAudioCtx;
+
+        // Suppress blank and non-speech tokens for cleaner output
+        params.suppress_blank = true;
+        params.suppress_non_speech_tokens = true;
 
         if (whisper_full(ctx, params, floatSamples.data(), sampleCount) != 0) {
             Q_EMIT errorOccurred(i18n("Failed to transcribe audio"));
