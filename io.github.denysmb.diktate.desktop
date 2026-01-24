@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Diktate
 Exec=diktate
-Icon=kde
+Icon=io.github.denysmb.diktate
 Type=Application
 Terminal=false
 Categories=Utility

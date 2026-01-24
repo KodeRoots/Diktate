@@ -83,5 +83,6 @@ FetchContent_MakeAvailable(whisper)
 add_subdirectory(src)
 
 install(PROGRAMS io.github.denysmb.diktate.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+install(FILES src/assets/io.github.denysmb.diktate.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps)
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
