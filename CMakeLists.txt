@@ -36,7 +36,9 @@ include(FetchContent)
 # GPU acceleration options for whisper.cpp
 option(DIKTATE_CUDA "Enable CUDA GPU acceleration (NVIDIA)" OFF)
 option(DIKTATE_VULKAN "Enable Vulkan GPU acceleration" OFF)
-option(DIKTATE_OPENBLAS "Enable OpenBLAS for optimized CPU inference (requires libopenblas-dev)" OFF)
+# OpenBLAS is ON by default for significantly faster CPU inference (15-30% improvement)
+# Like SpeechNote, we always try to use OpenBLAS when available
+option(DIKTATE_OPENBLAS "Enable OpenBLAS for optimized CPU inference (requires libopenblas-dev)" ON)
 
 # Configure whisper.cpp build options before fetching
 if(DIKTATE_CUDA)
@@ -79,6 +81,15 @@ string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 # KDE disables exceptions by default with -fno-exceptions
 string(REPLACE "-fno-exceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
+# Aggressive optimization flags for whisper.cpp (like SpeechNote does)
+# -O3: Maximum optimization level
+# -ffast-math: Faster floating-point operations (safe for neural network inference)
+# -fno-finite-math-only: Ensure NaN/Inf handling still works (required by some code paths)
+set(WHISPER_OPTIMIZATION_FLAGS "-O3 -ffast-math -fno-finite-math-only")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WHISPER_OPTIMIZATION_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WHISPER_OPTIMIZATION_FLAGS}")
+message(STATUS "Diktate: Using aggressive optimization flags for whisper.cpp: ${WHISPER_OPTIMIZATION_FLAGS}")
+
 # Fetch whisper.cpp
 FetchContent_Declare(
     whisper
@@ -86,7 +97,26 @@ FetchContent_Declare(
     GIT_TAG        v1.7.3  # Updated version with Flash Attention and better performance
 )
 
-FetchContent_MakeAvailable(whisper)
+# Fetch WebRTC VAD for industrial-grade voice activity detection
+# This is much more accurate than simple RMS threshold checking
+FetchContent_Declare(
+    webrtcvad
+    GIT_REPOSITORY https://github.com/webrtc-mirror/webrtc.git
+    GIT_TAG        main
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  common_audio/vad  # Only need VAD component
+)
+
+# Since WebRTC is large and we only need VAD, we'll use a minimal standalone implementation
+# Fetch libfvad - a standalone WebRTC VAD implementation
+FetchContent_Declare(
+    fvad
+    GIT_REPOSITORY https://github.com/dpirch/libfvad.git
+    GIT_TAG        master
+)
+
+FetchContent_MakeAvailable(whisper fvad)
+message(STATUS "Diktate: WebRTC VAD (libfvad) enabled for voice activity detection")
 
 # Restore original compiler flags for our own code
 set(CMAKE_C_FLAGS "${ORIGINAL_CMAKE_C_FLAGS}")

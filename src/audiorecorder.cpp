@@ -1,4 +1,5 @@
 #include "audiorecorder.h"
+#include "vad.h"
 #include <QAudioFormat>
 #include <QMediaDevices>
 #include <QDebug>
@@ -8,6 +9,16 @@
 AudioRecorder::AudioRecorder(QObject *parent)
     : QObject(parent)
 {
+    // Initialize WebRTC VAD for industrial-grade voice activity detection
+    // Uses 16kHz sample rate (required by Whisper) and Aggressive mode
+    m_vad = std::make_unique<VAD>(16000, VAD::Mode::Aggressive);
+    
+    if (m_vad->isValid()) {
+        qDebug() << "AudioRecorder: WebRTC VAD initialized successfully";
+    } else {
+        qWarning() << "AudioRecorder: VAD initialization failed, falling back to RMS threshold";
+    }
+
     m_silenceTimer = new QTimer(this);
     m_silenceTimer->setInterval(100); // Check every 100ms
     connect(m_silenceTimer, &QTimer::timeout, this, [this]() {
@@ -79,6 +90,12 @@ void AudioRecorder::startRecording()
     m_hasDetectedVoice = false;
     m_lastVoiceTime.start();
     m_silenceTimer->start();
+    
+    // Reset VAD state for new recording
+    if (m_vad && m_vad->isValid()) {
+        m_vad->reset();
+    }
+    
     Q_EMIT recordingStarted();
 }
 
@@ -104,9 +121,18 @@ bool AudioRecorder::isRecording() const
 
 void AudioRecorder::processAudioData(const QByteArray &data)
 {
-    qint16 rms = calculateRMS(data);
+    bool voiceDetected = false;
+    
+    // Use WebRTC VAD if available (more accurate than RMS)
+    if (m_vad && m_vad->isValid()) {
+        voiceDetected = m_vad->isSpeech(data);
+    } else {
+        // Fallback to RMS threshold if VAD not available
+        qint16 rms = calculateRMS(data);
+        voiceDetected = (rms > SILENCE_THRESHOLD_RMS);
+    }
 
-    if (rms > SILENCE_THRESHOLD) {
+    if (voiceDetected) {
         m_hasDetectedVoice = true;
         m_lastVoiceTime.restart();
     }
@@ -151,4 +177,9 @@ void AudioRecorder::cleanup()
     }
 
     m_audioData.clear();
+    
+    // Reset VAD state
+    if (m_vad && m_vad->isValid()) {
+        m_vad->reset();
+    }
 }

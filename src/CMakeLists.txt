@@ -11,15 +11,22 @@ target_sources(diktate
     audiorecorder.cpp
     whispertranscriber.cpp
     modelmanager.cpp
+    vad.cpp
 
     audiorecorder.h
     whispertranscriber.h
     modelmanager.h
+    vad.h
 )
 
 ecm_target_qml_sources(diktate
     SOURCES
     qml/Main.qml
+)
+
+target_include_directories(diktate
+    PRIVATE
+    ${fvad_SOURCE_DIR}/include
 )
 
 target_link_libraries(diktate
@@ -36,6 +43,7 @@ target_link_libraries(diktate
     KF6::CoreAddons
     KF6::IconThemes
     whisper
+    fvad
 )
 
 install(TARGETS diktate ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

@@ -9,6 +9,10 @@
 #include <QTemporaryFile>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <memory>
+
+// Forward declaration
+class VAD;
 
 class AudioRecorder : public QObject
 {
@@ -35,16 +39,20 @@ private:
     QByteArray m_audioData;
 
     // Voice Activity Detection (VAD)
+    std::unique_ptr<VAD> m_vad;
     QTimer *m_silenceTimer = nullptr;
     QElapsedTimer m_lastVoiceTime;
     bool m_hasDetectedVoice = false;
 
-    static constexpr int SILENCE_THRESHOLD = 500;      // RMS threshold for silence detection
-    static constexpr int SILENCE_DURATION_MS = 1500;   // Stop after 1.5s of silence
-    static constexpr int MIN_RECORDING_MS = 500;       // Minimum recording duration
+    // Fallback RMS threshold (used if VAD fails to initialize)
+    static constexpr int SILENCE_THRESHOLD_RMS = 500;    // RMS threshold for silence detection
+    static constexpr int SILENCE_DURATION_MS = 1500;     // Stop after 1.5s of silence
+    static constexpr int MIN_RECORDING_MS = 500;         // Minimum recording duration
 
     void cleanup();
     void processAudioData(const QByteArray &data);
+    
+    // Fallback RMS-based detection (used if VAD not available)
     qint16 calculateRMS(const QByteArray &data);
 };
 
