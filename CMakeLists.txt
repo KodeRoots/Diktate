@@ -66,10 +66,18 @@ endif()
 # Disable -Werror for whisper.cpp build (it has some -Wundef warnings)
 set(GGML_FATAL_WARNINGS OFF CACHE BOOL "" FORCE)
 
+# Save original compiler flags before modifying for whisper.cpp
+set(ORIGINAL_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+set(ORIGINAL_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 # Remove -Werror=undef from compile flags for whisper.cpp compatibility
 # KDE's strict compiler settings conflict with whisper.cpp's preprocessor conditionals
 string(REPLACE "-Werror=undef" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+# Enable exceptions for whisper.cpp (required by Vulkan shader generator)
+# KDE disables exceptions by default with -fno-exceptions
+string(REPLACE "-fno-exceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 # Fetch whisper.cpp
 FetchContent_Declare(
@@ -79,6 +87,10 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(whisper)
+
+# Restore original compiler flags for our own code
+set(CMAKE_C_FLAGS "${ORIGINAL_CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CMAKE_CXX_FLAGS}")
 
 add_subdirectory(src)
 
