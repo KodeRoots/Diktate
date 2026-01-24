@@ -10,6 +10,7 @@
 #include "audiorecorder.h"
 #include "whispertranscriber.h"
 #include "modelmanager.h"
+#include "cpuinfo.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,6 +21,9 @@ int main(int argc, char *argv[])
     // QApplication::setOrganizationDomain(QStringLiteral("kde.org"));
     QApplication::setApplicationName(QStringLiteral("Diktate"));
     QApplication::setDesktopFileName(QStringLiteral("io.github.denysmb.diktate"));
+
+    // Log CPU features for debugging whisper.cpp performance
+    CpuInfo::logInfo();
 
     QApplication::setStyle(QStringLiteral("breeze"));
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {

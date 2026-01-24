@@ -12,11 +12,13 @@ target_sources(diktate
     whispertranscriber.cpp
     modelmanager.cpp
     vad.cpp
+    cpuinfo.cpp
 
     audiorecorder.h
     whispertranscriber.h
     modelmanager.h
     vad.h
+    cpuinfo.h
 )
 
 ecm_target_qml_sources(diktate
