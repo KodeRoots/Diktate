@@ -11,6 +11,7 @@
 #include "whispertranscriber.h"
 #include "modelmanager.h"
 #include "cpuinfo.h"
+#include "gpuinfo.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,8 +23,9 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(QStringLiteral("Diktate"));
     QApplication::setDesktopFileName(QStringLiteral("io.github.denysmb.diktate"));
 
-    // Log CPU features for debugging whisper.cpp performance
+    // Log CPU and GPU features for debugging whisper.cpp performance
     CpuInfo::logInfo();
+    GpuInfo::logInfo();
 
     QApplication::setStyle(QStringLiteral("breeze"));
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
@@ -43,6 +45,9 @@ int main(int argc, char *argv[])
 
     ModelManager modelManager;
     engine.rootContext()->setContextProperty(QStringLiteral("modelManager"), &modelManager);
+
+    GpuInfo gpuInfo;
+    engine.rootContext()->setContextProperty(QStringLiteral("gpuInfo"), &gpuInfo);
 
     // Connect ModelManager signals to WhisperTranscriber
     QObject::connect(&modelManager, &ModelManager::modelChanged,

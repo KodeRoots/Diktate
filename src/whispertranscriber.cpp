@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QDebug>
+#include <QSettings>
 #include <QtConcurrent>
 #include <KLocalizedString>
 #include <thread>
@@ -11,6 +12,10 @@
 WhisperTranscriber::WhisperTranscriber(QObject *parent)
     : QObject(parent)
 {
+    // Load saved GPU settings
+    QSettings settings;
+    m_useGpu = settings.value(QStringLiteral("transcriber/useGpu"), true).toBool();
+    m_gpuDevice = settings.value(QStringLiteral("transcriber/gpuDevice"), 0).toInt();
 }
 
 WhisperTranscriber::~WhisperTranscriber()
@@ -19,6 +24,60 @@ WhisperTranscriber::~WhisperTranscriber()
     if (m_ctx) {
         whisper_free(m_ctx);
         m_ctx = nullptr;
+    }
+}
+
+bool WhisperTranscriber::useGpu() const
+{
+    return m_useGpu;
+}
+
+void WhisperTranscriber::setUseGpu(bool enabled)
+{
+    if (m_useGpu != enabled) {
+        m_useGpu = enabled;
+
+        // Save setting
+        QSettings settings;
+        settings.setValue(QStringLiteral("transcriber/useGpu"), m_useGpu);
+
+        Q_EMIT useGpuChanged();
+
+        // Reload model with new GPU settings
+        reloadModelIfNeeded();
+    }
+}
+
+int WhisperTranscriber::gpuDevice() const
+{
+    return m_gpuDevice;
+}
+
+void WhisperTranscriber::setGpuDevice(int device)
+{
+    if (m_gpuDevice != device) {
+        m_gpuDevice = device;
+
+        // Save setting
+        QSettings settings;
+        settings.setValue(QStringLiteral("transcriber/gpuDevice"), m_gpuDevice);
+
+        Q_EMIT gpuDeviceChanged();
+
+        // Reload model with new GPU device
+        if (m_useGpu) {
+            reloadModelIfNeeded();
+        }
+    }
+}
+
+void WhisperTranscriber::reloadModelIfNeeded()
+{
+    if (m_modelLoaded && !m_currentModelPath.isEmpty()) {
+        QString modelPath = m_currentModelPath;
+        m_currentModelPath.clear();  // Force reload
+        m_modelLoaded = false;
+        loadModel(modelPath);
     }
 }
 
@@ -51,7 +110,8 @@ void WhisperTranscriber::loadModel(const QString &modelPath)
     }
 
     struct whisper_context_params params = whisper_context_default_params();
-    params.use_gpu = true;  // Enable GPU acceleration if available
+    params.use_gpu = m_useGpu;
+    params.gpu_device = m_gpuDevice;
     params.flash_attn = true;  // Enable Flash Attention for better performance
     struct whisper_context *newCtx = whisper_init_from_file_with_params(modelPath.toUtf8().constData(), params);
 

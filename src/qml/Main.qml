@@ -21,20 +21,28 @@ Kirigami.ApplicationWindow {
 
         property string tempFilePath: ""
 
-        actions: Kirigami.Action {
-            id: recordAction
-            text: i18n("Record")
-            icon.name: "media-record"
-            enabled: transcriber.isModelLoaded()
-            onTriggered: {
-                if (audioRecorder.isRecording()) {
-                    audioRecorder.stopRecording();
-                    transcriber.transcribe(tempFilePath);
-                } else {
-                    audioRecorder.startRecording();
+        actions: [
+            Kirigami.Action {
+                id: recordAction
+                text: i18n("Record")
+                icon.name: "media-record"
+                enabled: transcriber.isModelLoaded()
+                onTriggered: {
+                    if (audioRecorder.isRecording()) {
+                        audioRecorder.stopRecording();
+                        transcriber.transcribe(tempFilePath);
+                    } else {
+                        audioRecorder.startRecording();
+                    }
                 }
+            },
+            Kirigami.Action {
+                id: settingsAction
+                text: i18n("Settings")
+                icon.name: "configure"
+                onTriggered: settingsDialog.open()
             }
-        }
+        ]
 
         Connections {
             target: audioRecorder
@@ -100,6 +108,59 @@ Kirigami.ApplicationWindow {
             function onDownloadError(message) {
                 errorInlineMessage.text = message;
                 errorInlineMessage.visible = true;
+            }
+        }
+
+        // Settings dialog
+        Kirigami.Dialog {
+            id: settingsDialog
+            title: i18n("Settings")
+            preferredWidth: Kirigami.Units.gridUnit * 25
+            // standardButtons: Kirigami.Dialog.Close
+
+            Kirigami.FormLayout {
+                // GPU Settings Section
+                Controls.Switch {
+                    id: useGpuSwitch
+                    Kirigami.FormData.label: i18n("Use GPU acceleration:")
+                    checked: transcriber.useGpu
+                    onToggled: transcriber.useGpu = checked
+                }
+
+                Controls.Label {
+                    visible: gpuInfo.gpuCount > 0
+                    Kirigami.FormData.label: i18n("Detected GPUs:")
+                    text: gpuInfo.gpuNames.join(", ")
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                Controls.Label {
+                    visible: gpuInfo.gpuCount === 0
+                    Kirigami.FormData.label: i18n("Detected GPUs:")
+                    text: i18n("None (using CPU only)")
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                Controls.SpinBox {
+                    id: gpuDeviceSpinBox
+                    Kirigami.FormData.label: i18n("GPU device:")
+                    visible: useGpuSwitch.checked && gpuInfo.gpuCount > 1
+                    from: 0
+                    to: Math.max(0, gpuInfo.gpuCount - 1)
+                    value: transcriber.gpuDevice
+                    onValueModified: transcriber.gpuDevice = value
+                }
+
+                Controls.Label {
+                    visible: useGpuSwitch.checked
+                    text: i18n("Note: Changing GPU settings will reload the model")
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    opacity: 0.7
+                    font: Kirigami.Theme.smallFont
+                }
             }
         }
 
