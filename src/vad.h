@@ -78,10 +78,20 @@ private:
     size_t m_frameSize;  // In samples
 
     // Smoothing parameters to avoid choppy detection
-    static constexpr size_t SPEECH_FRAMES_THRESHOLD = 2;   // Frames to confirm speech start
-    static constexpr size_t SILENCE_FRAMES_THRESHOLD = 5;  // Frames to confirm speech end (longer for trailing)
+    // At 10ms per frame:
+    // - 15 frames = 150ms to confirm speech start (filters out clicks/pops/noise)
+    // - 50 frames = 500ms to confirm speech end (allows natural pauses)
+    static constexpr size_t SPEECH_FRAMES_THRESHOLD = 15;   // Frames to confirm speech start
+    static constexpr size_t SILENCE_FRAMES_THRESHOLD = 50;  // Frames to confirm speech end
+    
+    // Cooldown period after speech ends before we can detect new speech
+    // This prevents rapid re-triggering from residual noise
+    // 100 frames = 1000ms (1 second) cooldown
+    static constexpr size_t COOLDOWN_FRAMES = 100;
+    
     size_t m_consecutiveSpeechFrames = 0;
     size_t m_consecutiveSilenceFrames = 0;
+    size_t m_cooldownFramesRemaining = 0;
     bool m_inSpeech = false;
 
     // Buffer for partial frames

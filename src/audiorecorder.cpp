@@ -10,8 +10,9 @@ AudioRecorder::AudioRecorder(QObject *parent)
     : QObject(parent)
 {
     // Initialize WebRTC VAD for industrial-grade voice activity detection
-    // Uses 16kHz sample rate (required by Whisper) and Aggressive mode
-    m_vad = std::make_unique<VAD>(16000, VAD::Mode::Aggressive);
+    // Uses 16kHz sample rate (required by Whisper) and VeryAggressive mode
+    // VeryAggressive is the most strict - better at rejecting background noise
+    m_vad = std::make_unique<VAD>(16000, VAD::Mode::VeryAggressive);
     
     if (m_vad->isValid()) {
         qDebug() << "AudioRecorder: WebRTC VAD initialized successfully";

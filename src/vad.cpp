@@ -55,6 +55,7 @@ void VAD::reset()
     m_bufferUsed = 0;
     m_consecutiveSpeechFrames = 0;
     m_consecutiveSilenceFrames = 0;
+    m_cooldownFramesRemaining = 0;
     m_inSpeech = false;
 }
 
@@ -119,14 +120,14 @@ bool VAD::isSpeech(const int16_t* samples, size_t sampleCount)
     m_bufferUsed += sampleCount;
     
     // Process all complete frames
-    bool anySpeechDetected = false;
     size_t processedSamples = 0;
+    size_t framesProcessed = 0;
     
     while (processedSamples + m_frameSize <= m_bufferUsed) {
         bool frameIsSpeech = processFrame(m_inputBuffer.data() + processedSamples);
+        framesProcessed++;
         
         if (frameIsSpeech) {
-            anySpeechDetected = true;
             m_consecutiveSpeechFrames++;
             m_consecutiveSilenceFrames = 0;
         } else {
@@ -146,20 +147,32 @@ bool VAD::isSpeech(const int16_t* samples, size_t sampleCount)
         m_bufferUsed = 0;
     }
     
-    // State machine with hysteresis:
+    // Decrement cooldown if active
+    if (m_cooldownFramesRemaining > 0) {
+        if (framesProcessed >= m_cooldownFramesRemaining) {
+            m_cooldownFramesRemaining = 0;
+        } else {
+            m_cooldownFramesRemaining -= framesProcessed;
+        }
+    }
+    
+    // State machine with hysteresis and cooldown:
     // - Need SPEECH_FRAMES_THRESHOLD consecutive speech frames to enter speech state
     // - Need SILENCE_FRAMES_THRESHOLD consecutive silence frames to leave speech state
-    if (!m_inSpeech && m_consecutiveSpeechFrames >= SPEECH_FRAMES_THRESHOLD) {
+    // - After speech ends, enter cooldown period before allowing new speech detection
+    // This prevents rapid toggling between states
+    if (!m_inSpeech && m_cooldownFramesRemaining == 0 && m_consecutiveSpeechFrames >= SPEECH_FRAMES_THRESHOLD) {
         m_inSpeech = true;
         qDebug() << "VAD: Speech started";
     } else if (m_inSpeech && m_consecutiveSilenceFrames >= SILENCE_FRAMES_THRESHOLD) {
         m_inSpeech = false;
-        qDebug() << "VAD: Speech ended";
+        m_cooldownFramesRemaining = COOLDOWN_FRAMES;  // Start cooldown
+        m_consecutiveSpeechFrames = 0;  // Reset speech counter
+        qDebug() << "VAD: Speech ended (cooldown started)";
     }
     
-    // Return true if we're in speech state OR if any frame in this batch had speech
-    // This ensures we don't miss the start of speech
-    return m_inSpeech || anySpeechDetected;
+    // Only return the hysteresis state - this prevents oscillation
+    return m_inSpeech;
 }
 
 bool VAD::isSpeech(const QByteArray& data)
