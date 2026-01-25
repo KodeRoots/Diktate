@@ -84,9 +84,12 @@ QString ModelManager::getModelFileName(ModelSize size, ModelType type) const
         case Base: sizeName = QStringLiteral("base"); break;
         case Small: sizeName = QStringLiteral("small"); break;
         case Medium: sizeName = QStringLiteral("medium"); break;
-        case Large: sizeName = QStringLiteral("large"); break;
+        // Use large-v3-turbo: 5.4x faster than large-v3 with minimal accuracy loss
+        // (809M params, ~7.75% WER vs 1.55B params, ~7.4% WER for large-v3)
+        case Large: sizeName = QStringLiteral("large-v3-turbo"); break;
     }
 
+    // Note: There's no English-only version of the large model
     if (type == EnglishOnly && size != Large) {
         return QStringLiteral("ggml-%1.en.bin").arg(sizeName);
     } else {
@@ -107,9 +110,10 @@ QString ModelManager::getModelDisplayName(ModelSize size, ModelType type) const
         case Base: sizeName = i18n("Base"); break;
         case Small: sizeName = i18n("Small"); break;
         case Medium: sizeName = i18n("Medium"); break;
-        case Large: sizeName = i18n("Large"); break;
+        case Large: sizeName = i18n("Large (Turbo)"); break;
     }
 
+    // Note: There's no English-only version of the large model
     QString typeName = (type == EnglishOnly && size != Large) ? i18n("English") : i18n("Multilingual");
     return QStringLiteral("%1 (%2)").arg(sizeName, typeName);
 }
