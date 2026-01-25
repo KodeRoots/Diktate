@@ -7,7 +7,7 @@
   
   A fast and private offline transcription tool using Whisper AI
   
-  [![Download on Flathub](https://camo.githubusercontent.com/70f19b1c27faac6f1b7cdcedb300e3af3dcec0619aa0ba5b011c6ac1e0c600ee/68747470733a2f2f666c61746875622e6f72672f6173736574732f6261646765732f666c61746875622d62616467652d656e2e706e67)](https://flathub.org/apps/io.github.denysmb.diktate)
+  [![Download on Flathub](https://flathub.org/api/badge?svg)](https://flathub.org/apps/io.github.denysmb.diktate)
 </div>
 
 ---
@@ -31,7 +31,7 @@ Diktate is a native KDE application that provides accurate speech-to-text transc
 
 The easiest way to install Diktate is through Flathub:
 
-[![Download on Flathub](https://camo.githubusercontent.com/70f19b1c27faac6f1b7cdcedb300e3af3dcec0619aa0ba5b011c6ac1e0c600ee/68747470733a2f2f666c61746875622e6f72672f6173736574732f6261646765732f666c61746875622d62616467652d656e2e706e67)](https://flathub.org/apps/io.github.denysmb.diktate)
+[![Download on Flathub](https://flathub.org/api/badge?svg)](https://flathub.org/apps/io.github.denysmb.diktate)
 
 Or via command line:
 ```bash
