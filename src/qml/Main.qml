@@ -97,6 +97,7 @@ Kirigami.ApplicationWindow {
                 text: i18n("Record")
                 icon.name: "media-record"
                 enabled: transcriber.isModelLoaded()
+                displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
                     if (audioRecorder.isRecording()) {
                         audioRecorder.stopRecording();
