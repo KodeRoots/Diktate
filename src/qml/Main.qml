@@ -45,7 +45,10 @@ Kirigami.ApplicationWindow {
             if (code === "auto")
                 continue;
             let displayName = transcriber.languageDisplayName(code);
-            langList.push({ code: code, displayName: displayName });
+            langList.push({
+                code: code,
+                displayName: displayName
+            });
         }
 
         // Sort alphabetically by display name
@@ -81,6 +84,31 @@ Kirigami.ApplicationWindow {
         return findLanguageIndex(transcriber.language);
     }
 
+    globalDrawer: Kirigami.GlobalDrawer {
+        id: globalDrawer
+        title: i18nc("@title:drawer", "Diktate")
+        titleIcon: "diktate"
+        isMenu: true
+        actions: [
+            Kirigami.Action {
+                id: gpuAction
+                text: i18n("GPU Acceleration")
+                icon.name: "show-gpu-effects-symbolic"
+                checkable: true
+                checked: transcriber.useGpu
+                visible: gpuInfo.gpuCount > 0
+                onToggled: {
+                    transcriber.useGpu = checked;
+                    if (checked) {
+                        root.showPassiveNotification(i18n("GPU acceleration enabled. Model will reload."), "short");
+                    } else {
+                        root.showPassiveNotification(i18n("GPU acceleration disabled. Model will reload."), "short");
+                    }
+                }
+            }
+        ]
+    }
+
     pageStack.initialPage: Kirigami.Page {
         id: page
 
@@ -108,37 +136,6 @@ Kirigami.ApplicationWindow {
                 }
             }
         ]
-
-        // Custom title delegate with GPU toggle
-        titleDelegate: RowLayout {
-            spacing: Kirigami.Units.smallSpacing
-
-            Kirigami.Heading {
-                text: page.title
-                level: 1
-                Layout.fillWidth: true
-            }
-
-            Controls.Switch {
-                id: gpuSwitch
-                text: i18n("GPU Acceleration")
-                checked: transcriber.useGpu
-                visible: gpuInfo.gpuCount > 0
-
-                Controls.ToolTip.text: checked ? i18n("GPU acceleration enabled (%1)", gpuInfo.gpuNames[transcriber.gpuDevice] || i18n("Unknown")) : i18n("GPU acceleration disabled (using CPU)")
-                Controls.ToolTip.visible: hovered
-                Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
-
-                onToggled: {
-                    transcriber.useGpu = checked;
-                    if (checked) {
-                        root.showPassiveNotification(i18n("GPU acceleration enabled. Model will reload."), "short");
-                    } else {
-                        root.showPassiveNotification(i18n("GPU acceleration disabled. Model will reload."), "short");
-                    }
-                }
-            }
-        }
 
         Connections {
             target: audioRecorder
