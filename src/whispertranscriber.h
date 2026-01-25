@@ -5,6 +5,8 @@
 #include <QString>
 #include <QThread>
 #include <QMutex>
+#include <QStringList>
+#include <QMap>
 
 #include <whisper.h>
 
@@ -14,6 +16,8 @@ class WhisperTranscriber : public QObject
     Q_PROPERTY(QString currentModelPath READ currentModelPath NOTIFY modelLoaded)
     Q_PROPERTY(bool useGpu READ useGpu WRITE setUseGpu NOTIFY useGpuChanged)
     Q_PROPERTY(int gpuDevice READ gpuDevice WRITE setGpuDevice NOTIFY gpuDeviceChanged)
+    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
+    Q_PROPERTY(QStringList supportedLanguages READ supportedLanguages CONSTANT)
 
 public:
     explicit WhisperTranscriber(QObject *parent = nullptr);
@@ -31,6 +35,14 @@ public:
     int gpuDevice() const;
     void setGpuDevice(int device);
 
+    QString language() const;
+    void setLanguage(const QString &language);
+
+    QStringList supportedLanguages() const;
+
+    // Get display name for a language code
+    Q_INVOKABLE QString languageDisplayName(const QString &code) const;
+
 Q_SIGNALS:
     void transcriptionComplete(QString text);
     void transcriptionProgress(QString status);
@@ -38,6 +50,7 @@ Q_SIGNALS:
     void modelLoaded(QString modelPath);
     void useGpuChanged();
     void gpuDeviceChanged();
+    void languageChanged();
 
 private:
     struct whisper_context *m_ctx = nullptr;
@@ -46,8 +59,11 @@ private:
     QString m_currentModelPath;
     bool m_useGpu = true;
     int m_gpuDevice = 0;
+    QString m_language = QStringLiteral("auto");  // Default to auto-detect
     void runTranscription(const QString &audioPath);
     void reloadModelIfNeeded();
+
+    static const QMap<QString, QString> s_languageNames;
 };
 
 #endif // WHISPERTRANSCRIBER_H

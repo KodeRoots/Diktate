@@ -14,6 +14,73 @@ Kirigami.ApplicationWindow {
 
     title: i18nc("@title:window", "Diktate")
 
+    // Language data - codes map to display names by index
+    // Built once on component completion
+    property var languageDisplayNames: []
+    property var languageCodes: []
+
+    Component.onCompleted: {
+        buildLanguageModel();
+    }
+
+    function buildLanguageModel() {
+        let names = [];
+        let codes = [];
+
+        // First: English (uses English-only model) - special code "en-model"
+        names.push(i18n("English (Optimized)"));
+        codes.push("en-model");
+
+        // Second: Auto Detect (uses Multilingual model)
+        names.push(i18n("Auto Detect"));
+        codes.push("auto");
+
+        // Get all supported languages and sort them alphabetically
+        let languages = transcriber.supportedLanguages;
+        let langList = [];
+
+        for (let i = 0; i < languages.length; i++) {
+            let code = languages[i];
+            // Skip "auto" as we already added it above
+            if (code === "auto")
+                continue;
+            let displayName = transcriber.languageDisplayName(code);
+            langList.push({ code: code, displayName: displayName });
+        }
+
+        // Sort alphabetically by display name
+        langList.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+        // Add sorted languages
+        for (let j = 0; j < langList.length; j++) {
+            names.push(langList[j].displayName);
+            codes.push(langList[j].code);
+        }
+
+        languageDisplayNames = names;
+        languageCodes = codes;
+    }
+
+    // Helper function to find language index by code
+    function findLanguageIndex(code) {
+        for (let i = 0; i < languageCodes.length; i++) {
+            if (languageCodes[i] === code) {
+                return i;
+            }
+        }
+        return 1;  // Default to "Auto Detect"
+    }
+
+    // Helper function to get initial language index based on current settings
+    function getInitialLanguageIndex() {
+        // If using English-only model, select "English (Optimized)"
+        if (modelManager.modelType === 0) {  // EnglishOnly
+            return 0;  // "en-model"
+        }
+        // Otherwise, find the transcriber's language in the list
+        return findLanguageIndex(transcriber.language);
+    }
+
     pageStack.initialPage: Kirigami.Page {
         id: page
 
@@ -173,11 +240,23 @@ Kirigami.ApplicationWindow {
                 Controls.ComboBox {
                     id: languageCombo
                     Layout.fillWidth: true
-                    model: [i18n("English"), i18n("Multilingual")]
-                    currentIndex: modelManager.modelLanguage
-                    enabled: !modelManager.isDownloading && modelManager.modelSize !== 4  // Large has no English-only
+
+                    model: languageDisplayNames
+                    currentIndex: getInitialLanguageIndex()
+                    enabled: !modelManager.isDownloading
+
                     onActivated: function (index) {
-                        modelManager.modelLanguage = index;
+                        let code = languageCodes[index];
+
+                        if (code === "en-model") {
+                            // User selected English - use English-only model
+                            modelManager.modelType = 0;  // EnglishOnly
+                            transcriber.language = "en";
+                        } else {
+                            // User selected Auto or a specific language - use Multilingual model
+                            modelManager.modelType = 1;  // Multilingual
+                            transcriber.language = code;
+                        }
                     }
                 }
 
@@ -196,9 +275,9 @@ Kirigami.ApplicationWindow {
                 visible: !modelManager.isCurrentModelAvailable || modelManager.isDownloading
                 text: {
                     if (modelManager.isDownloading) {
-                        return i18n("Downloading %1... %2%", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage), Math.round(modelManager.downloadProgress));
+                        return i18n("Downloading %1... %2%", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelType), Math.round(modelManager.downloadProgress));
                     } else {
-                        return i18n("Model %1 is not installed", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelLanguage));
+                        return i18n("Model %1 is not installed", modelManager.getModelDisplayName(modelManager.modelSize, modelManager.modelType));
                     }
                 }
 

@@ -31,16 +31,16 @@ void ModelManager::setModelSize(ModelSize size)
     }
 }
 
-ModelManager::ModelLanguage ModelManager::modelLanguage() const
+ModelManager::ModelType ModelManager::modelType() const
 {
-    return m_modelLanguage;
+    return m_modelType;
 }
 
-void ModelManager::setModelLanguage(ModelLanguage language)
+void ModelManager::setModelType(ModelType type)
 {
-    if (m_modelLanguage != language) {
-        m_modelLanguage = language;
-        Q_EMIT modelLanguageChanged();
+    if (m_modelType != type) {
+        m_modelType = type;
+        Q_EMIT modelTypeChanged();
         checkCurrentModelAvailability();
     }
 }
@@ -57,7 +57,7 @@ qreal ModelManager::downloadProgress() const
 
 QString ModelManager::currentModelPath() const
 {
-    return getModelPath(m_modelSize, m_modelLanguage);
+    return getModelPath(m_modelSize, m_modelType);
 }
 
 bool ModelManager::isCurrentModelAvailable() const
@@ -65,9 +65,9 @@ bool ModelManager::isCurrentModelAvailable() const
     return m_isCurrentModelAvailable;
 }
 
-bool ModelManager::isModelAvailable(ModelSize size, ModelLanguage language) const
+bool ModelManager::isModelAvailable(ModelSize size, ModelType type) const
 {
-    QString path = getModelPath(size, language);
+    QString path = getModelPath(size, type);
     return QFile::exists(path);
 }
 
@@ -76,7 +76,7 @@ QString ModelManager::modelsDirectory() const
     return QDir::homePath() + QStringLiteral("/.local/share/diktate/");
 }
 
-QString ModelManager::getModelFileName(ModelSize size, ModelLanguage language) const
+QString ModelManager::getModelFileName(ModelSize size, ModelType type) const
 {
     QString sizeName;
     switch (size) {
@@ -87,19 +87,19 @@ QString ModelManager::getModelFileName(ModelSize size, ModelLanguage language) c
         case Large: sizeName = QStringLiteral("large"); break;
     }
 
-    if (language == English && size != Large) {
+    if (type == EnglishOnly && size != Large) {
         return QStringLiteral("ggml-%1.en.bin").arg(sizeName);
     } else {
         return QStringLiteral("ggml-%1.bin").arg(sizeName);
     }
 }
 
-QString ModelManager::getModelPath(ModelSize size, ModelLanguage language) const
+QString ModelManager::getModelPath(ModelSize size, ModelType type) const
 {
-    return modelsDirectory() + getModelFileName(size, language);
+    return modelsDirectory() + getModelFileName(size, type);
 }
 
-QString ModelManager::getModelDisplayName(ModelSize size, ModelLanguage language) const
+QString ModelManager::getModelDisplayName(ModelSize size, ModelType type) const
 {
     QString sizeName;
     switch (size) {
@@ -110,19 +110,19 @@ QString ModelManager::getModelDisplayName(ModelSize size, ModelLanguage language
         case Large: sizeName = i18n("Large"); break;
     }
 
-    QString langName = (language == English && size != Large) ? i18n("English") : i18n("Multilingual");
-    return QStringLiteral("%1 (%2)").arg(sizeName, langName);
+    QString typeName = (type == EnglishOnly && size != Large) ? i18n("English") : i18n("Multilingual");
+    return QStringLiteral("%1 (%2)").arg(sizeName, typeName);
 }
 
-QString ModelManager::getModelUrl(ModelSize size, ModelLanguage language) const
+QString ModelManager::getModelUrl(ModelSize size, ModelType type) const
 {
-    QString fileName = getModelFileName(size, language);
+    QString fileName = getModelFileName(size, type);
     return QStringLiteral("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/%1").arg(fileName);
 }
 
 void ModelManager::checkCurrentModelAvailability()
 {
-    bool available = isModelAvailable(m_modelSize, m_modelLanguage);
+    bool available = isModelAvailable(m_modelSize, m_modelType);
     if (m_isCurrentModelAvailable != available) {
         m_isCurrentModelAvailable = available;
         Q_EMIT isCurrentModelAvailableChanged();
@@ -140,7 +140,7 @@ void ModelManager::downloadCurrentModel()
         return;
     }
 
-    QString url = getModelUrl(m_modelSize, m_modelLanguage);
+    QString url = getModelUrl(m_modelSize, m_modelType);
     QString filePath = currentModelPath();
 
     // Ensure directory exists

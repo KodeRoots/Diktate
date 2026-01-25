@@ -9,13 +9,120 @@
 #include <thread>
 #include <algorithm>
 
+// Static map of Whisper language codes to display names
+// Based on OpenAI Whisper's official language list
+const QMap<QString, QString> WhisperTranscriber::s_languageNames = {
+    {QStringLiteral("auto"), QStringLiteral("Auto Detect")},
+    {QStringLiteral("en"), QStringLiteral("English")},
+    {QStringLiteral("zh"), QStringLiteral("Chinese")},
+    {QStringLiteral("de"), QStringLiteral("German")},
+    {QStringLiteral("es"), QStringLiteral("Spanish")},
+    {QStringLiteral("ru"), QStringLiteral("Russian")},
+    {QStringLiteral("ko"), QStringLiteral("Korean")},
+    {QStringLiteral("fr"), QStringLiteral("French")},
+    {QStringLiteral("ja"), QStringLiteral("Japanese")},
+    {QStringLiteral("pt"), QStringLiteral("Portuguese")},
+    {QStringLiteral("tr"), QStringLiteral("Turkish")},
+    {QStringLiteral("pl"), QStringLiteral("Polish")},
+    {QStringLiteral("ca"), QStringLiteral("Catalan")},
+    {QStringLiteral("nl"), QStringLiteral("Dutch")},
+    {QStringLiteral("ar"), QStringLiteral("Arabic")},
+    {QStringLiteral("sv"), QStringLiteral("Swedish")},
+    {QStringLiteral("it"), QStringLiteral("Italian")},
+    {QStringLiteral("id"), QStringLiteral("Indonesian")},
+    {QStringLiteral("hi"), QStringLiteral("Hindi")},
+    {QStringLiteral("fi"), QStringLiteral("Finnish")},
+    {QStringLiteral("vi"), QStringLiteral("Vietnamese")},
+    {QStringLiteral("he"), QStringLiteral("Hebrew")},
+    {QStringLiteral("uk"), QStringLiteral("Ukrainian")},
+    {QStringLiteral("el"), QStringLiteral("Greek")},
+    {QStringLiteral("ms"), QStringLiteral("Malay")},
+    {QStringLiteral("cs"), QStringLiteral("Czech")},
+    {QStringLiteral("ro"), QStringLiteral("Romanian")},
+    {QStringLiteral("da"), QStringLiteral("Danish")},
+    {QStringLiteral("hu"), QStringLiteral("Hungarian")},
+    {QStringLiteral("ta"), QStringLiteral("Tamil")},
+    {QStringLiteral("no"), QStringLiteral("Norwegian")},
+    {QStringLiteral("th"), QStringLiteral("Thai")},
+    {QStringLiteral("ur"), QStringLiteral("Urdu")},
+    {QStringLiteral("hr"), QStringLiteral("Croatian")},
+    {QStringLiteral("bg"), QStringLiteral("Bulgarian")},
+    {QStringLiteral("lt"), QStringLiteral("Lithuanian")},
+    {QStringLiteral("la"), QStringLiteral("Latin")},
+    {QStringLiteral("mi"), QStringLiteral("Maori")},
+    {QStringLiteral("ml"), QStringLiteral("Malayalam")},
+    {QStringLiteral("cy"), QStringLiteral("Welsh")},
+    {QStringLiteral("sk"), QStringLiteral("Slovak")},
+    {QStringLiteral("te"), QStringLiteral("Telugu")},
+    {QStringLiteral("fa"), QStringLiteral("Persian")},
+    {QStringLiteral("lv"), QStringLiteral("Latvian")},
+    {QStringLiteral("bn"), QStringLiteral("Bengali")},
+    {QStringLiteral("sr"), QStringLiteral("Serbian")},
+    {QStringLiteral("az"), QStringLiteral("Azerbaijani")},
+    {QStringLiteral("sl"), QStringLiteral("Slovenian")},
+    {QStringLiteral("kn"), QStringLiteral("Kannada")},
+    {QStringLiteral("et"), QStringLiteral("Estonian")},
+    {QStringLiteral("mk"), QStringLiteral("Macedonian")},
+    {QStringLiteral("br"), QStringLiteral("Breton")},
+    {QStringLiteral("eu"), QStringLiteral("Basque")},
+    {QStringLiteral("is"), QStringLiteral("Icelandic")},
+    {QStringLiteral("hy"), QStringLiteral("Armenian")},
+    {QStringLiteral("ne"), QStringLiteral("Nepali")},
+    {QStringLiteral("mn"), QStringLiteral("Mongolian")},
+    {QStringLiteral("bs"), QStringLiteral("Bosnian")},
+    {QStringLiteral("kk"), QStringLiteral("Kazakh")},
+    {QStringLiteral("sq"), QStringLiteral("Albanian")},
+    {QStringLiteral("sw"), QStringLiteral("Swahili")},
+    {QStringLiteral("gl"), QStringLiteral("Galician")},
+    {QStringLiteral("mr"), QStringLiteral("Marathi")},
+    {QStringLiteral("pa"), QStringLiteral("Punjabi")},
+    {QStringLiteral("si"), QStringLiteral("Sinhala")},
+    {QStringLiteral("km"), QStringLiteral("Khmer")},
+    {QStringLiteral("sn"), QStringLiteral("Shona")},
+    {QStringLiteral("yo"), QStringLiteral("Yoruba")},
+    {QStringLiteral("so"), QStringLiteral("Somali")},
+    {QStringLiteral("af"), QStringLiteral("Afrikaans")},
+    {QStringLiteral("oc"), QStringLiteral("Occitan")},
+    {QStringLiteral("ka"), QStringLiteral("Georgian")},
+    {QStringLiteral("be"), QStringLiteral("Belarusian")},
+    {QStringLiteral("tg"), QStringLiteral("Tajik")},
+    {QStringLiteral("sd"), QStringLiteral("Sindhi")},
+    {QStringLiteral("gu"), QStringLiteral("Gujarati")},
+    {QStringLiteral("am"), QStringLiteral("Amharic")},
+    {QStringLiteral("yi"), QStringLiteral("Yiddish")},
+    {QStringLiteral("lo"), QStringLiteral("Lao")},
+    {QStringLiteral("uz"), QStringLiteral("Uzbek")},
+    {QStringLiteral("fo"), QStringLiteral("Faroese")},
+    {QStringLiteral("ht"), QStringLiteral("Haitian Creole")},
+    {QStringLiteral("ps"), QStringLiteral("Pashto")},
+    {QStringLiteral("tk"), QStringLiteral("Turkmen")},
+    {QStringLiteral("nn"), QStringLiteral("Nynorsk")},
+    {QStringLiteral("mt"), QStringLiteral("Maltese")},
+    {QStringLiteral("sa"), QStringLiteral("Sanskrit")},
+    {QStringLiteral("lb"), QStringLiteral("Luxembourgish")},
+    {QStringLiteral("my"), QStringLiteral("Myanmar")},
+    {QStringLiteral("bo"), QStringLiteral("Tibetan")},
+    {QStringLiteral("tl"), QStringLiteral("Tagalog")},
+    {QStringLiteral("mg"), QStringLiteral("Malagasy")},
+    {QStringLiteral("as"), QStringLiteral("Assamese")},
+    {QStringLiteral("tt"), QStringLiteral("Tatar")},
+    {QStringLiteral("haw"), QStringLiteral("Hawaiian")},
+    {QStringLiteral("ln"), QStringLiteral("Lingala")},
+    {QStringLiteral("ha"), QStringLiteral("Hausa")},
+    {QStringLiteral("ba"), QStringLiteral("Bashkir")},
+    {QStringLiteral("jw"), QStringLiteral("Javanese")},
+    {QStringLiteral("su"), QStringLiteral("Sundanese")},
+    {QStringLiteral("yue"), QStringLiteral("Cantonese")},
+};
+
 WhisperTranscriber::WhisperTranscriber(QObject *parent)
     : QObject(parent)
 {
-    // Load saved GPU settings
+    // Load saved settings
     QSettings settings;
     m_useGpu = settings.value(QStringLiteral("transcriber/useGpu"), true).toBool();
     m_gpuDevice = settings.value(QStringLiteral("transcriber/gpuDevice"), 0).toInt();
+    m_language = settings.value(QStringLiteral("transcriber/language"), QStringLiteral("auto")).toString();
 }
 
 WhisperTranscriber::~WhisperTranscriber()
@@ -145,7 +252,10 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
 
     Q_EMIT transcriptionProgress(i18n("Transcribing..."));
 
-    QtConcurrent::run([this, audioPath]() {
+    // Capture the language setting for the async lambda
+    const QString languageCode = m_language;
+
+    QtConcurrent::run([this, audioPath, languageCode]() {
         QFile audioFile(audioPath);
         if (!audioFile.open(QIODevice::ReadOnly)) {
             Q_EMIT errorOccurred(i18n("Failed to open audio file"));
@@ -185,7 +295,11 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
         params.print_special = false;
         params.print_realtime = false;
         params.translate = false;
-        params.language = "auto";  // Use auto-detect for multilingual support
+
+        // Set the language for transcription
+        // "auto" means auto-detect, otherwise use the specified language code
+        QByteArray langBytes = languageCode.toUtf8();
+        params.language = langBytes.constData();
 
         // Dynamic thread count: use all available cores minus one for responsiveness
         const int maxThreads = static_cast<int>(std::thread::hardware_concurrency());
@@ -225,4 +339,44 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
 bool WhisperTranscriber::isModelLoaded() const
 {
     return m_modelLoaded;
+}
+
+QString WhisperTranscriber::language() const
+{
+    return m_language;
+}
+
+void WhisperTranscriber::setLanguage(const QString &language)
+{
+    if (m_language != language) {
+        m_language = language;
+
+        // Save setting
+        QSettings settings;
+        settings.setValue(QStringLiteral("transcriber/language"), m_language);
+
+        Q_EMIT languageChanged();
+    }
+}
+
+QStringList WhisperTranscriber::supportedLanguages() const
+{
+    // Return language codes in a specific order:
+    // 1. "auto" for auto-detect
+    // 2. Rest alphabetically by display name
+    QStringList codes = s_languageNames.keys();
+
+    // Sort by display name, but keep "auto" first
+    std::sort(codes.begin(), codes.end(), [this](const QString &a, const QString &b) {
+        if (a == QStringLiteral("auto")) return true;
+        if (b == QStringLiteral("auto")) return false;
+        return s_languageNames.value(a) < s_languageNames.value(b);
+    });
+
+    return codes;
+}
+
+QString WhisperTranscriber::languageDisplayName(const QString &code) const
+{
+    return s_languageNames.value(code, code);
 }

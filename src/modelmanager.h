@@ -12,7 +12,7 @@ class ModelManager : public QObject
     Q_OBJECT
 
     Q_PROPERTY(ModelSize modelSize READ modelSize WRITE setModelSize NOTIFY modelSizeChanged)
-    Q_PROPERTY(ModelLanguage modelLanguage READ modelLanguage WRITE setModelLanguage NOTIFY modelLanguageChanged)
+    Q_PROPERTY(ModelType modelType READ modelType WRITE setModelType NOTIFY modelTypeChanged)
     Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY isDownloadingChanged)
     Q_PROPERTY(qreal downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
     Q_PROPERTY(QString currentModelPath READ currentModelPath NOTIFY currentModelPathChanged)
@@ -28,11 +28,12 @@ public:
     };
     Q_ENUM(ModelSize)
 
-    enum ModelLanguage {
-        English,
-        Multilingual
+    // Model type determines which model file to use
+    enum ModelType {
+        EnglishOnly,    // Uses ggml-{size}.en.bin - optimized for English
+        Multilingual    // Uses ggml-{size}.bin - supports all languages
     };
-    Q_ENUM(ModelLanguage)
+    Q_ENUM(ModelType)
 
     explicit ModelManager(QObject *parent = nullptr);
     ~ModelManager();
@@ -40,24 +41,24 @@ public:
     ModelSize modelSize() const;
     void setModelSize(ModelSize size);
 
-    ModelLanguage modelLanguage() const;
-    void setModelLanguage(ModelLanguage language);
+    ModelType modelType() const;
+    void setModelType(ModelType type);
 
     bool isDownloading() const;
     qreal downloadProgress() const;
     QString currentModelPath() const;
     bool isCurrentModelAvailable() const;
 
-    Q_INVOKABLE bool isModelAvailable(ModelSize size, ModelLanguage language) const;
-    Q_INVOKABLE QString getModelPath(ModelSize size, ModelLanguage language) const;
-    Q_INVOKABLE QString getModelFileName(ModelSize size, ModelLanguage language) const;
-    Q_INVOKABLE QString getModelDisplayName(ModelSize size, ModelLanguage language) const;
+    Q_INVOKABLE bool isModelAvailable(ModelSize size, ModelType type) const;
+    Q_INVOKABLE QString getModelPath(ModelSize size, ModelType type) const;
+    Q_INVOKABLE QString getModelFileName(ModelSize size, ModelType type) const;
+    Q_INVOKABLE QString getModelDisplayName(ModelSize size, ModelType type) const;
     Q_INVOKABLE void downloadCurrentModel();
     Q_INVOKABLE void cancelDownload();
 
 Q_SIGNALS:
     void modelSizeChanged();
-    void modelLanguageChanged();
+    void modelTypeChanged();
     void isDownloadingChanged();
     void downloadProgressChanged();
     void currentModelPathChanged();
@@ -74,11 +75,11 @@ private Q_SLOTS:
 
 private:
     QString modelsDirectory() const;
-    QString getModelUrl(ModelSize size, ModelLanguage language) const;
+    QString getModelUrl(ModelSize size, ModelType type) const;
     void checkCurrentModelAvailability();
 
     ModelSize m_modelSize = Base;
-    ModelLanguage m_modelLanguage = Multilingual;
+    ModelType m_modelType = Multilingual;
     bool m_isDownloading = false;
     qreal m_downloadProgress = 0.0;
     bool m_isCurrentModelAvailable = false;
