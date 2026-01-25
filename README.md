@@ -36,6 +36,10 @@ Or via command line:
 flatpak install flathub io.github.denysmb.diktate
 ```
 
+### Building from Source
+
+For build instructions, see [BUILD.md](BUILD.md).
+
 ## Usage
 
 1. Launch Diktate from your application menu
