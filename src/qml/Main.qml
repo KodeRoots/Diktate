@@ -6,8 +6,11 @@ import org.kde.kirigami as Kirigami
 Kirigami.ApplicationWindow {
     id: root
 
-    width: 600
+    width: 680
     height: 400
+
+    minimumWidth: 680
+    minimumHeight: 400
 
     title: i18nc("@title:window", "Diktate")
 
@@ -35,14 +38,39 @@ Kirigami.ApplicationWindow {
                         audioRecorder.startRecording();
                     }
                 }
-            },
-            Kirigami.Action {
-                id: settingsAction
-                text: i18n("Settings")
-                icon.name: "configure"
-                onTriggered: settingsDialog.open()
             }
         ]
+
+        // Custom title delegate with GPU toggle
+        titleDelegate: RowLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            Kirigami.Heading {
+                text: page.title
+                level: 1
+                Layout.fillWidth: true
+            }
+
+            Controls.Switch {
+                id: gpuSwitch
+                text: i18n("GPU Acceleration")
+                checked: transcriber.useGpu
+                visible: gpuInfo.gpuCount > 0
+
+                Controls.ToolTip.text: checked ? i18n("GPU acceleration enabled (%1)", gpuInfo.gpuNames[transcriber.gpuDevice] || i18n("Unknown")) : i18n("GPU acceleration disabled (using CPU)")
+                Controls.ToolTip.visible: hovered
+                Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+
+                onToggled: {
+                    transcriber.useGpu = checked;
+                    if (checked) {
+                        root.showPassiveNotification(i18n("GPU acceleration enabled. Model will reload."), "short");
+                    } else {
+                        root.showPassiveNotification(i18n("GPU acceleration disabled. Model will reload."), "short");
+                    }
+                }
+            }
+        }
 
         Connections {
             target: audioRecorder
@@ -108,59 +136,6 @@ Kirigami.ApplicationWindow {
             function onDownloadError(message) {
                 errorInlineMessage.text = message;
                 errorInlineMessage.visible = true;
-            }
-        }
-
-        // Settings dialog
-        Kirigami.Dialog {
-            id: settingsDialog
-            title: i18n("Settings")
-            preferredWidth: Kirigami.Units.gridUnit * 25
-            // standardButtons: Kirigami.Dialog.Close
-
-            Kirigami.FormLayout {
-                // GPU Settings Section
-                Controls.Switch {
-                    id: useGpuSwitch
-                    Kirigami.FormData.label: i18n("Use GPU acceleration:")
-                    checked: transcriber.useGpu
-                    onToggled: transcriber.useGpu = checked
-                }
-
-                Controls.Label {
-                    visible: gpuInfo.gpuCount > 0
-                    Kirigami.FormData.label: i18n("Detected GPUs:")
-                    text: gpuInfo.gpuNames.join(", ")
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-
-                Controls.Label {
-                    visible: gpuInfo.gpuCount === 0
-                    Kirigami.FormData.label: i18n("Detected GPUs:")
-                    text: i18n("None (using CPU only)")
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-
-                Controls.SpinBox {
-                    id: gpuDeviceSpinBox
-                    Kirigami.FormData.label: i18n("GPU device:")
-                    visible: useGpuSwitch.checked && gpuInfo.gpuCount > 1
-                    from: 0
-                    to: Math.max(0, gpuInfo.gpuCount - 1)
-                    value: transcriber.gpuDevice
-                    onValueModified: transcriber.gpuDevice = value
-                }
-
-                Controls.Label {
-                    visible: useGpuSwitch.checked
-                    text: i18n("Note: Changing GPU settings will reload the model")
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    opacity: 0.7
-                    font: Kirigami.Theme.smallFont
-                }
             }
         }
 
