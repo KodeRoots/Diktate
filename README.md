@@ -40,6 +40,10 @@ flatpak install flathub io.github.denysmb.diktate
 
 For build instructions, see [BUILD.md](BUILD.md).
 
+## Screenshots
+
+![Main Window](screenshots/main_window.png)
+
 ## Usage
 
 1. Launch Diktate from your application menu
