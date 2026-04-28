@@ -2,7 +2,7 @@ add_executable(diktate)
 
 ecm_add_qml_module(diktate
     URI
-    io.github.denysmb.diktate
+    org.koderoots.diktate
 )
 
 target_sources(diktate

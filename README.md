@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="src/assets/io.github.denysmb.diktate.svg" width="128" height="128" alt="Diktate Icon"/>
+  <img src="src/assets/org.koderoots.diktate.svg" width="128" height="128" alt="Diktate Icon"/>
   
   # Diktate
   
@@ -29,11 +29,11 @@ Diktate is a native KDE application that provides accurate speech-to-text transc
 
 The easiest way to install Diktate is through Flathub:
 
-[![Download on Flathub](https://flathub.org/api/badge?svg)](https://flathub.org/apps/io.github.denysmb.diktate)
+[![Download on Flathub](https://flathub.org/api/badge?svg)](https://flathub.org/apps/org.koderoots.diktate)
 
 Or via command line:
 ```bash
-flatpak install flathub io.github.denysmb.diktate
+flatpak install flathub org.koderoots.diktate
 ```
 
 ### Building from Source

@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     // QApplication::setOrganizationName(QStringLiteral("KDE"));
     // QApplication::setOrganizationDomain(QStringLiteral("kde.org"));
     QApplication::setApplicationName(QStringLiteral("Diktate"));
-    QApplication::setDesktopFileName(QStringLiteral("io.github.denysmb.diktate"));
+    QApplication::setDesktopFileName(QStringLiteral("org.koderoots.diktate"));
 
     // Log CPU and GPU features for debugging whisper.cpp performance
     CpuInfo::logInfo();
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         transcriber.loadModel(modelManager.currentModelPath());
     }
 
-    engine.loadFromModule("io.github.denysmb.diktate", "Main");
+    engine.loadFromModule("org.koderoots.diktate", "Main");
 
     if (engine.rootObjects().isEmpty()) {
         return -1;
