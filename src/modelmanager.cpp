@@ -73,7 +73,7 @@ bool ModelManager::isModelAvailable(ModelSize size, ModelType type) const
 
 QString ModelManager::modelsDirectory() const
 {
-    return QDir::homePath() + QStringLiteral("/.local/share/diktate/");
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QStringLiteral("/");
 }
 
 QString ModelManager::getModelFileName(ModelSize size, ModelType type) const
