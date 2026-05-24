@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Diktate
 Exec=diktate
-Icon=io.github.denysmb.diktate
+Icon=org.koderoots.diktate
 Type=Application
 Terminal=false
 Categories=Utility

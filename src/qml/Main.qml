@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as Controls
+import Qt.labs.platform as Platform
 import org.kde.kirigami as Kirigami
 
 Kirigami.ApplicationWindow {
@@ -13,6 +14,11 @@ Kirigami.ApplicationWindow {
     minimumHeight: 400
 
     title: i18nc("@title:window", "Diktate")
+
+    onClosing: function(close) {
+        close.accepted = false
+        systemTray.visible = false
+    }
 
     // Language data - codes map to display names by index
     // Built once on component completion
@@ -121,10 +127,18 @@ Kirigami.ApplicationWindow {
 
         actions: [
             Kirigami.Action {
+                id: uploadAction
+                text: i18n("Upload File")
+                icon.name: "document-open"
+                enabled: transcriber.isModelLoaded() && !audioFileProcessor.isProcessing
+                displayHint: Kirigami.DisplayHint.KeepVisible
+                onTriggered: fileDialog.open()
+            },
+            Kirigami.Action {
                 id: recordAction
                 text: i18n("Record")
                 icon.name: "media-record"
-                enabled: transcriber.isModelLoaded()
+                enabled: transcriber.isModelLoaded() && !audioFileProcessor.isProcessing
                 displayHint: Kirigami.DisplayHint.KeepVisible
                 onTriggered: {
                     if (audioRecorder.isRecording()) {
@@ -142,12 +156,14 @@ Kirigami.ApplicationWindow {
             function onRecordingStarted() {
                 recordAction.text = i18n("Recording...");
                 recordAction.enabled = false;
+                uploadAction.enabled = false;
             }
 
             function onRecordingFinished(filePath) {
                 page.tempFilePath = filePath;
                 recordAction.text = i18n("Transcribing...");
                 recordAction.enabled = false;
+                uploadAction.enabled = false;
                 textArea.placeholderText = i18n("Transcribing...");
                 transcriber.transcribe(filePath);
             }
@@ -157,6 +173,7 @@ Kirigami.ApplicationWindow {
                 errorInlineMessage.visible = true;
                 recordAction.text = i18n("Record");
                 recordAction.enabled = transcriber.isModelLoaded();
+                uploadAction.enabled = transcriber.isModelLoaded();
             }
         }
 
@@ -167,6 +184,7 @@ Kirigami.ApplicationWindow {
                 textArea.placeholderText = i18n("Press Record to start...");
                 recordAction.text = i18n("Record");
                 recordAction.enabled = true;
+                uploadAction.enabled = true;
                 successMessage.text = i18n("Transcription complete");
                 successMessage.visible = true;
                 successMessageTimer.restart();
@@ -182,10 +200,12 @@ Kirigami.ApplicationWindow {
                 errorInlineMessage.visible = true;
                 recordAction.text = i18n("Record");
                 recordAction.enabled = transcriber.isModelLoaded();
+                uploadAction.enabled = transcriber.isModelLoaded();
             }
 
             function onModelLoaded(modelPath) {
                 recordAction.enabled = true;
+                uploadAction.enabled = true;
                 textArea.placeholderText = i18n("Press Record to start...");
             }
         }
@@ -335,6 +355,47 @@ Kirigami.ApplicationWindow {
                         }
                     }
                 }
+            }
+        }
+
+        Platform.FileDialog {
+            id: fileDialog
+            title: i18n("Select Audio File")
+            nameFilters: [i18n("Audio Files (*.wav *.mp3 *.ogg *.flac *.m4a *.aac *.wma *.opus *.webm)"), i18n("All Files (*)")]
+            fileMode: Platform.FileDialog.OpenFile
+            onAccepted: {
+                audioFileProcessor.processFile(fileDialog.currentFile);
+                uploadAction.enabled = false;
+                recordAction.enabled = false;
+                textArea.placeholderText = i18n("Decoding audio file...");
+            }
+        }
+
+        Connections {
+            target: audioFileProcessor
+            function onProcessingStarted() {
+                uploadAction.text = i18n("Decoding...");
+                uploadAction.enabled = false;
+                recordAction.enabled = false;
+                textArea.placeholderText = i18n("Decoding audio file...");
+            }
+
+            function onProcessingFinished(tempFilePath) {
+                uploadAction.text = i18n("Upload File");
+                recordAction.text = i18n("Transcribing...");
+                recordAction.enabled = false;
+                uploadAction.enabled = false;
+                textArea.placeholderText = i18n("Transcribing...");
+            }
+
+            function onErrorOccurred(message) {
+                errorInlineMessage.text = message;
+                errorInlineMessage.visible = true;
+                uploadAction.text = i18n("Upload File");
+                uploadAction.enabled = transcriber.isModelLoaded();
+                recordAction.text = i18n("Record");
+                recordAction.enabled = transcriber.isModelLoaded();
+                textArea.placeholderText = i18n("Press Record to start...");
             }
         }
 

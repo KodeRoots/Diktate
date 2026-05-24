@@ -6,7 +6,8 @@
 #include <QSettings>
 #include <QtConcurrent>
 #include <KLocalizedString>
-#include <thread>
+#include <KNotification>
+#include <QMetaObject>
 #include <algorithm>
 
 // Static map of Whisper language codes to display names
@@ -333,6 +334,13 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
         result.remove(QStringLiteral("[BLANK_AUDIO]"));
 
         Q_EMIT transcriptionComplete(result.trimmed());
+
+        QMetaObject::invokeMethod(qApp, []() {
+            KNotification::event(QStringLiteral("transcriptionComplete"),
+                i18n("Diktate"),
+                i18n("Transcription complete"),
+                QStringLiteral("org.koderoots.diktate"));
+        });
     });
 }
 

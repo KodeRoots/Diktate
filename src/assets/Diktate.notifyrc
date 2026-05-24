@@ -1,0 +1,8 @@
+[Global]
+IconName=org.koderoots.diktate
+DisplayName=Diktate
+
+[Event/transcriptionComplete]
+Name=Transcription Complete
+Comment=Audio transcription has finished
+Action=Popup
