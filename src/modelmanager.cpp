@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QFile>
 #include <QStandardPaths>
+#include <QSettings>
 #include <QDebug>
 #include <KLocalizedString>
 
@@ -9,6 +10,9 @@ ModelManager::ModelManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
 {
+    QSettings settings;
+    m_modelSize = static_cast<ModelSize>(settings.value(QStringLiteral("model/size"), static_cast<int>(Base)).toInt());
+    m_modelType = static_cast<ModelType>(settings.value(QStringLiteral("model/type"), static_cast<int>(Multilingual)).toInt());
     checkCurrentModelAvailability();
 }
 
@@ -26,6 +30,8 @@ void ModelManager::setModelSize(ModelSize size)
 {
     if (m_modelSize != size) {
         m_modelSize = size;
+        QSettings settings;
+        settings.setValue(QStringLiteral("model/size"), static_cast<int>(size));
         Q_EMIT modelSizeChanged();
         checkCurrentModelAvailability();
     }
@@ -40,6 +46,8 @@ void ModelManager::setModelType(ModelType type)
 {
     if (m_modelType != type) {
         m_modelType = type;
+        QSettings settings;
+        settings.setValue(QStringLiteral("model/type"), static_cast<int>(type));
         Q_EMIT modelTypeChanged();
         checkCurrentModelAvailability();
     }
