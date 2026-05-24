@@ -2,6 +2,7 @@
 #include <KStatusNotifierItem>
 #include <KLocalizedString>
 #include <QApplication>
+#include <QIcon>
 #include <QMenu>
 
 SystemTray::SystemTray(QObject *parent)
@@ -14,6 +15,7 @@ SystemTray::SystemTray(QObject *parent)
     m_trayIcon->setStatus(KStatusNotifierItem::Active);
 
     QAction *showAction = m_trayIcon->contextMenu()->addAction(i18n("Show Diktate"));
+    showAction->setIcon(QIcon::fromTheme(QStringLiteral("org.koderoots.diktate")));
     m_trayIcon->contextMenu()->addSeparator();
 
     connect(showAction, &QAction::triggered, this, [this]() { setVisible(true); });
