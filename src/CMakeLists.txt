@@ -28,10 +28,12 @@ ecm_target_qml_sources(diktate
     qml/Main.qml
 )
 
-target_include_directories(diktate
-    PRIVATE
-    ${fvad_SOURCE_DIR}/include
-)
+if(NOT DIKTATE_SYSTEM_FVAD)
+    target_include_directories(diktate
+        PRIVATE
+        ${fvad_SOURCE_DIR}/include
+    )
+endif()
 
 target_link_libraries(diktate
     PRIVATE
@@ -49,5 +51,15 @@ target_link_libraries(diktate
     whisper
     fvad
 )
+
+if(DIKTATE_SYSTEM_WHISPER)
+    target_link_libraries(diktate
+        PRIVATE
+        ${GGML_LIB}
+        ${GGML_CPU_LIB}
+        ${GGML_BASE_LIB}
+        OpenMP::OpenMP_CXX
+    )
+endif()
 
 install(TARGETS diktate ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

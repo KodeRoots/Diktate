@@ -14,6 +14,45 @@
   ],
   "modules": [
     {
+      "name": "whisper.cpp",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DWHISPER_BUILD_TESTS=OFF",
+        "-DWHISPER_BUILD_EXAMPLES=OFF",
+        "-DWHISPER_BUILD_SERVER=OFF",
+        "-DWHISPER_SDL2=OFF",
+        "-DWHISPER_CCACHE=OFF",
+        "-DBUILD_SHARED_LIBS=OFF"
+      ],
+      "builddir": true,
+      "build-commands": [
+        "mkdir -p /app/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v1.7.3.tar.gz",
+          "sha256": "a36faa04885b45e4dd27751a37cb54300617717dbd3b7e5ec336f830e051a28c"
+        }
+      ]
+    },
+    {
+      "name": "libfvad",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "builddir": true,
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/dpirch/libfvad/archive/refs/heads/master.tar.gz",
+          "sha256": "2ea1b288bbb4a2dc0f43ce08ddd430f137b5240431ab83d105835975b5cd4f49"
+        }
+      ]
+    },
+    {
       "name": "diktate",
       "buildsystem": "cmake-ninja",
       "config-opts": ["-DCMAKE_BUILD_TYPE=Release"],
