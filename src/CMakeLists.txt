@@ -53,6 +53,7 @@ target_link_libraries(diktate
     KF6::CoreAddons
     KF6::IconThemes
     KF6::StatusNotifierItem
+    KF6::Notifications
     whisper
     fvad
 )

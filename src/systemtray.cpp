@@ -2,6 +2,7 @@
 #include <KStatusNotifierItem>
 #include <KLocalizedString>
 #include <QApplication>
+#include <QMenu>
 
 SystemTray::SystemTray(QObject *parent)
     : QObject(parent)
@@ -12,17 +13,16 @@ SystemTray::SystemTray(QObject *parent)
     m_trayIcon->setCategory(KStatusNotifierItem::ApplicationStatus);
     m_trayIcon->setStatus(KStatusNotifierItem::Active);
 
-    m_trayIcon->contextMenu()->addAction(i18n("Show Diktate"));
+    QAction *showAction = m_trayIcon->contextMenu()->addAction(i18n("Show Diktate"));
     m_trayIcon->contextMenu()->addSeparator();
-    QAction *quitAction = m_trayIcon->contextMenu()->addAction(i18n("Quit"));
+
+    connect(showAction, &QAction::triggered, this, [this]() { setVisible(true); });
 
     connect(m_trayIcon, &KStatusNotifierItem::activateRequested,
             this, &SystemTray::onActivateRequested);
 
-    connect(quitAction, &QAction::triggered, this, &SystemTray::onQuitRequested);
-
-    connect(m_trayIcon->contextMenu()->actions().constFirst(), &QAction::triggered,
-            this, [this]() { setVisible(true); });
+    connect(m_trayIcon, &KStatusNotifierItem::quitRequested,
+            this, &SystemTray::quitRequested);
 }
 
 SystemTray::~SystemTray()
@@ -64,9 +64,4 @@ void SystemTray::onActivateRequested(bool active)
 {
     Q_UNUSED(active)
     setVisible(!m_visible);
-}
-
-void SystemTray::onQuitRequested()
-{
-    Q_EMIT quitRequested();
 }

@@ -27,7 +27,6 @@ Q_SIGNALS:
 
 private:
     void onActivateRequested(bool active);
-    void onQuitRequested();
 
     KStatusNotifierItem *m_trayIcon = nullptr;
     QWindow *m_window = nullptr;
