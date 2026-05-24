@@ -11,6 +11,7 @@ target_sources(diktate
     audiorecorder.cpp
     whispertranscriber.cpp
     modelmanager.cpp
+    audiofileprocessor.cpp
     vad.cpp
     cpuinfo.cpp
     gpuinfo.cpp
@@ -18,6 +19,7 @@ target_sources(diktate
     audiorecorder.h
     whispertranscriber.h
     modelmanager.h
+    audiofileprocessor.h
     vad.h
     cpuinfo.h
     gpuinfo.h

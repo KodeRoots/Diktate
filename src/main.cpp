@@ -10,6 +10,7 @@
 #include "audiorecorder.h"
 #include "whispertranscriber.h"
 #include "modelmanager.h"
+#include "audiofileprocessor.h"
 #include "cpuinfo.h"
 #include "gpuinfo.h"
 
@@ -46,12 +47,19 @@ int main(int argc, char *argv[])
     ModelManager modelManager;
     engine.rootContext()->setContextProperty(QStringLiteral("modelManager"), &modelManager);
 
+    AudioFileProcessor audioFileProcessor;
+    engine.rootContext()->setContextProperty(QStringLiteral("audioFileProcessor"), &audioFileProcessor);
+
     GpuInfo gpuInfo;
     engine.rootContext()->setContextProperty(QStringLiteral("gpuInfo"), &gpuInfo);
 
     // Connect ModelManager signals to WhisperTranscriber
     QObject::connect(&modelManager, &ModelManager::modelChanged,
                      &transcriber, &WhisperTranscriber::loadModel);
+
+    // Connect AudioFileProcessor to WhisperTranscriber
+    QObject::connect(&audioFileProcessor, &AudioFileProcessor::processingFinished,
+                     &transcriber, &WhisperTranscriber::transcribe);
 
     // Auto-load model if available on startup
     if (modelManager.isCurrentModelAvailable()) {
