@@ -15,6 +15,11 @@ Kirigami.ApplicationWindow {
 
     title: i18nc("@title:window", "Diktate")
 
+    onClosing: function(close) {
+        close.accepted = false
+        systemTray.visible = false
+    }
+
     // Language data - codes map to display names by index
     // Built once on component completion
     property var languageDisplayNames: []

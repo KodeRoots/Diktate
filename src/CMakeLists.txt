@@ -12,6 +12,7 @@ target_sources(diktate
     whispertranscriber.cpp
     modelmanager.cpp
     audiofileprocessor.cpp
+    systemtray.cpp
     vad.cpp
     cpuinfo.cpp
     gpuinfo.cpp
@@ -20,6 +21,7 @@ target_sources(diktate
     whispertranscriber.h
     modelmanager.h
     audiofileprocessor.h
+    systemtray.h
     vad.h
     cpuinfo.h
     gpuinfo.h
@@ -50,6 +52,7 @@ target_link_libraries(diktate
     KF6::I18n
     KF6::CoreAddons
     KF6::IconThemes
+    KF6::StatusNotifierItem
     whisper
     fvad
 )

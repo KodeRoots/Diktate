@@ -11,6 +11,7 @@
 #include "whispertranscriber.h"
 #include "modelmanager.h"
 #include "audiofileprocessor.h"
+#include "systemtray.h"
 #include "cpuinfo.h"
 #include "gpuinfo.h"
 
@@ -53,6 +54,9 @@ int main(int argc, char *argv[])
     GpuInfo gpuInfo;
     engine.rootContext()->setContextProperty(QStringLiteral("gpuInfo"), &gpuInfo);
 
+    SystemTray systemTray;
+    engine.rootContext()->setContextProperty(QStringLiteral("systemTray"), &systemTray);
+
     // Connect ModelManager signals to WhisperTranscriber
     QObject::connect(&modelManager, &ModelManager::modelChanged,
                      &transcriber, &WhisperTranscriber::loadModel);
@@ -60,6 +64,10 @@ int main(int argc, char *argv[])
     // Connect AudioFileProcessor to WhisperTranscriber
     QObject::connect(&audioFileProcessor, &AudioFileProcessor::processingFinished,
                      &transcriber, &WhisperTranscriber::transcribe);
+
+    // Connect SystemTray quit to application quit
+    QObject::connect(&systemTray, &SystemTray::quitRequested,
+                     &app, &QApplication::quit);
 
     // Auto-load model if available on startup
     if (modelManager.isCurrentModelAvailable()) {
@@ -71,6 +79,8 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }
+
+    systemTray.setWindow(qobject_cast<QWindow *>(engine.rootObjects().constFirst()));
 
     return app.exec();
 }
