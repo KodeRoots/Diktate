@@ -25,7 +25,7 @@ void GpuInfo::detect()
 
     // Always try to detect hardware for informational purposes
     detectCuda();
-    detectVulkan();
+    m_hasVulkan = detectVulkan();
 
     // Check compile-time flags for actual backend availability
 #ifdef GGML_USE_CUDA

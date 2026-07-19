@@ -102,7 +102,7 @@ Kirigami.ApplicationWindow {
                 icon.name: "show-gpu-effects-symbolic"
                 checkable: true
                 checked: transcriber.useGpu
-                visible: gpuInfo.gpuCount > 0
+                visible: gpuInfo.gpuAvailable
                 onToggled: {
                     transcriber.useGpu = checked;
                     if (checked) {
