@@ -14,7 +14,17 @@ constexpr char ENTER_RELEASE[] = "28:0";
 } // namespace
 
 YdotoolWriter::YdotoolWriter(QObject *parent) : QObject(parent) {
-  m_executable = QStandardPaths::findExecutable(QStringLiteral("ydotool"));
+  // Inside a Flatpak sandbox, talk to the system ydotool via flatpak-spawn
+  const bool inFlatpak = !qEnvironmentVariable("FLATPAK_ID").isEmpty();
+  if (inFlatpak) {
+    m_executable =
+        QStandardPaths::findExecutable(QStringLiteral("flatpak-spawn"));
+    m_useFlatpakSpawn = !m_executable.isEmpty();
+  }
+
+  if (m_executable.isEmpty()) {
+    m_executable = QStandardPaths::findExecutable(QStringLiteral("ydotool"));
+  }
   for (const QString &path : {QStringLiteral("/usr/bin/ydotool"),
                               QStringLiteral("/usr/local/bin/ydotool")}) {
     if (m_executable.isEmpty() && QFile::exists(path)) {
@@ -36,8 +46,9 @@ YdotoolWriter::YdotoolWriter(QObject *parent) : QObject(parent) {
 
   m_process = new QProcess(this);
 
-  // Let the ydotool client find the daemon socket (common dev setup)
-  if (qEnvironmentVariableIsEmpty("YDOTOOL_SOCKET")) {
+  // Let the ydotool client find the daemon socket (common dev setup).
+  // Not needed for flatpak-spawn: the host process inherits the host env.
+  if (!m_useFlatpakSpawn && qEnvironmentVariableIsEmpty("YDOTOOL_SOCKET")) {
     const QString homeSocket =
         QDir::homePath() + QStringLiteral("/.ydotool_socket");
     if (QFile::exists(homeSocket)) {
@@ -94,13 +105,19 @@ void YdotoolWriter::typeNextChunk() {
 }
 
 QStringList YdotoolWriter::argsForChunk(const QStringList &chunk) const {
-  if (!m_useDistroboxExec) {
-    return chunk;
+  if (m_useFlatpakSpawn) {
+    QStringList args{QLatin1String("--host"), QLatin1String("ydotool")};
+    args.append(chunk);
+    return args;
   }
 
-  QStringList args = chunk;
-  args.prepend(QStringLiteral("ydotool"));
-  return args;
+  if (m_useDistroboxExec) {
+    QStringList args = chunk;
+    args.prepend(QStringLiteral("ydotool"));
+    return args;
+  }
+
+  return chunk;
 }
 
 void YdotoolWriter::onProcessFinished(int exitCode,

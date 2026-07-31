@@ -28,7 +28,7 @@ target_sources(diktate
     ydotoolwriter.h
     vad.h
     cpuinfo.h
-    gpuinfo.hFOCUS TEST
+    gpuinfo.h
 )
 
 ecm_target_qml_sources(diktate

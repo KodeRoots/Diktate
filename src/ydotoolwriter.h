@@ -30,6 +30,7 @@ private:
   QProcess *m_process = nullptr;
   QList<QStringList> m_chunks;
   bool m_writing = false;
+  bool m_useFlatpakSpawn = false;
   bool m_useDistroboxExec = false;
 };
 
