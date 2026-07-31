@@ -1,6 +1,7 @@
 #include "systemtray.h"
 #include <KStatusNotifierItem>
 #include <KLocalizedString>
+#include <QAction>
 #include <QApplication>
 #include <QIcon>
 #include <QMenu>
@@ -16,6 +17,15 @@ SystemTray::SystemTray(QObject *parent)
 
     QAction *showAction = m_trayIcon->contextMenu()->addAction(i18n("Show Diktate"));
     showAction->setIcon(QIcon::fromTheme(QStringLiteral("org.koderoots.diktate")));
+    m_trayIcon->contextMenu()->addSeparator();
+
+    m_dictationAction = m_trayIcon->contextMenu()->addAction(i18n("Transcribe Microphone"));
+    m_dictationAction->setCheckable(true);
+    m_dictationAction->setIcon(QIcon::fromTheme(QStringLiteral("audio-input-microphone")));
+    connect(m_dictationAction, &QAction::toggled, this, [this](bool checked) {
+        Q_EMIT dictationToggleRequested(checked);
+    });
+
     m_trayIcon->contextMenu()->addSeparator();
 
     connect(showAction, &QAction::triggered, this, [this]() { setVisible(true); });
@@ -55,6 +65,31 @@ void SystemTray::setVisible(bool visible)
     }
 
     Q_EMIT visibleChanged();
+}
+
+bool SystemTray::isDictationActive() const
+{
+    return m_dictationActive;
+}
+
+void SystemTray::setDictationActive(bool active)
+{
+    if (m_dictationActive == active) {
+        return;
+    }
+
+    m_dictationActive = active;
+
+    m_dictationAction->setChecked(active);
+    m_dictationAction->setText(active ? i18n("Stop Dictation") : i18n("Transcribe Microphone"));
+
+    if (active) {
+        m_trayIcon->setIconByName(QStringLiteral("audio-input-microphone"));
+        m_trayIcon->setTitle(i18n("Diktate — Listening"));
+    } else {
+        m_trayIcon->setIconByName(QStringLiteral("org.koderoots.diktate"));
+        m_trayIcon->setTitle(i18n("Diktate"));
+    }
 }
 
 void SystemTray::setWindow(QWindow *window)

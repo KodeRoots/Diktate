@@ -160,6 +160,13 @@ Kirigami.ApplicationWindow {
             }
 
             function onRecordingFinished(filePath) {
+                if (dictationController.active) {
+                    recordAction.text = i18n("Transcribing...");
+                    recordAction.enabled = false;
+                    uploadAction.enabled = false;
+                    textArea.placeholderText = i18n("Transcribing...");
+                    return;
+                }
                 page.tempFilePath = filePath;
                 recordAction.text = i18n("Transcribing...");
                 recordAction.enabled = false;

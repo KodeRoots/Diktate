@@ -6,3 +6,23 @@ DisplayName=Diktate
 Name=Transcription Complete
 Comment=Audio transcription has finished
 Action=Popup
+
+[Event/dictationListening]
+Name=Dictation Listening
+Comment=Dictation is listening for speech
+Action=Popup
+
+[Event/dictationTranscribing]
+Name=Dictation Transcribing
+Comment=Dictation is transcribing the audio
+Action=Popup
+
+[Event/dictationComplete]
+Name=Dictation Complete
+Comment=Dictated text was typed
+Action=Popup
+
+[Event/dictationError]
+Name=Dictation Error
+Comment=Dictation failed
+Action=Popup

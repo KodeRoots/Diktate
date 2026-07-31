@@ -12,6 +12,8 @@
 #include "modelmanager.h"
 #include "audiofileprocessor.h"
 #include "systemtray.h"
+#include "dictationcontroller.h"
+#include "ydotoolwriter.h"
 #include "cpuinfo.h"
 #include "gpuinfo.h"
 
@@ -57,6 +59,10 @@ int main(int argc, char *argv[])
     SystemTray systemTray;
     engine.rootContext()->setContextProperty(QStringLiteral("systemTray"), &systemTray);
 
+    YdotoolWriter ydotoolWriter;
+    DictationController dictationController(&audioRecorder, &transcriber, &ydotoolWriter);
+    engine.rootContext()->setContextProperty(QStringLiteral("dictationController"), &dictationController);
+
     // Connect ModelManager signals to WhisperTranscriber
     QObject::connect(&modelManager, &ModelManager::modelChanged,
                      &transcriber, &WhisperTranscriber::loadModel);
@@ -68,6 +74,24 @@ int main(int argc, char *argv[])
     // Connect SystemTray quit to application quit
     QObject::connect(&systemTray, &SystemTray::quitRequested,
                      &app, &QApplication::quit);
+
+    // Connect SystemTray dictation toggle to DictationController
+    QObject::connect(&systemTray, &SystemTray::dictationToggleRequested,
+                     &dictationController, [&dictationController](bool active) {
+        if (active) {
+            dictationController.start();
+        } else {
+            dictationController.stop();
+        }
+    });
+
+    // Keep tray state in sync with the dictation session
+    QObject::connect(&dictationController, &DictationController::activeChanged,
+                     &systemTray, &SystemTray::setDictationActive);
+    QObject::connect(&dictationController, &DictationController::errorOccurred,
+                     &systemTray, [&systemTray](const QString &) {
+        systemTray.setDictationActive(false);
+    });
 
     // Auto-load model if available on startup
     if (modelManager.isCurrentModelAvailable()) {

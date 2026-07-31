@@ -13,6 +13,8 @@ target_sources(diktate
     modelmanager.cpp
     audiofileprocessor.cpp
     systemtray.cpp
+    dictationcontroller.cpp
+    ydotoolwriter.cpp
     vad.cpp
     cpuinfo.cpp
     gpuinfo.cpp
@@ -22,9 +24,11 @@ target_sources(diktate
     modelmanager.h
     audiofileprocessor.h
     systemtray.h
+    dictationcontroller.h
+    ydotoolwriter.h
     vad.h
     cpuinfo.h
-    gpuinfo.h
+    gpuinfo.hFOCUS TEST
 )
 
 ecm_target_qml_sources(diktate
