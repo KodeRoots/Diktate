@@ -47,6 +47,8 @@ if(DIKTATE_VULKAN)
     target_compile_definitions(diktate PRIVATE GGML_USE_VULKAN=1)
 endif()
 
+target_compile_definitions(diktate PRIVATE DIKTATE_VERSION_STRING="${PROJECT_VERSION}")
+
 target_link_libraries(diktate
     PRIVATE
     Qt6::Quick

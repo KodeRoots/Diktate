@@ -6,6 +6,8 @@
 #include <KLocalizedContext>
 #include <KLocalizedString>
 #include <KIconTheme>
+#include <KAboutData>
+#include <QIcon>
 
 #include "audiorecorder.h"
 #include "whispertranscriber.h"
@@ -25,6 +27,17 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(QStringLiteral("Diktate"));
     QApplication::setDesktopFileName(QStringLiteral("org.koderoots.diktate"));
 
+    KAboutData aboutData(QStringLiteral("diktate"),
+                         i18n("Diktate"),
+                         QStringLiteral(DIKTATE_VERSION_STRING),
+                         i18n("AI-powered speech-to-text for KDE Plasma"),
+                         KAboutLicense::GPL_V3,
+                         i18n("(c) 2025 Diktate contributors"));
+    aboutData.setHomepage(QStringLiteral("https://github.com/koderoots/diktate"));
+    aboutData.setBugAddress(QStringLiteral("https://github.com/koderoots/diktate/issues").toUtf8());
+    KAboutData::setApplicationData(aboutData);
+    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("org.koderoots.diktate")));
+
     // Log CPU and GPU features for debugging whisper.cpp performance
     CpuInfo::logInfo();
     GpuInfo::logInfo();
@@ -37,6 +50,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
+    engine.rootContext()->setContextProperty(QStringLiteral("appAboutData"), QVariant::fromValue(aboutData));
 
     // Expose backend classes to QML
     AudioRecorder audioRecorder;
