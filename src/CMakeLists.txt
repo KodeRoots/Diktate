@@ -39,6 +39,14 @@ if(NOT DIKTATE_SYSTEM_FVAD)
     )
 endif()
 
+if(DIKTATE_CUDA)
+    target_compile_definitions(diktate PRIVATE GGML_USE_CUDA=1)
+endif()
+
+if(DIKTATE_VULKAN)
+    target_compile_definitions(diktate PRIVATE GGML_USE_VULKAN=1)
+endif()
+
 target_link_libraries(diktate
     PRIVATE
     Qt6::Quick
@@ -66,6 +74,14 @@ if(DIKTATE_SYSTEM_WHISPER)
         ${GGML_BASE_LIB}
         OpenMP::OpenMP_CXX
     )
+
+    if(DIKTATE_VULKAN)
+        target_link_libraries(diktate
+            PRIVATE
+            ${GGML_VULKAN_LIB}
+            Vulkan::Vulkan
+        )
+    endif()
 endif()
 
 install(TARGETS diktate ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
