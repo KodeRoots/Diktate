@@ -15,6 +15,9 @@ Kirigami.ApplicationWindow {
 
     title: i18nc("@title:window", "Diktate")
 
+    pageStack.globalToolBar.showNavigationButtons: Kirigami.ApplicationHeaderStyle.ShowBackButton
+    pageStack.columnView.columnResizeMode: Kirigami.ColumnView.SingleColumn
+
     onClosing: function(close) {
         close.accepted = false
         systemTray.visible = false
@@ -111,8 +114,20 @@ Kirigami.ApplicationWindow {
                         root.showPassiveNotification(i18n("GPU acceleration disabled. Model will reload."), "short");
                     }
                 }
+            },
+            Kirigami.Action {
+                text: i18n("About Diktate")
+                icon.name: "help-about"
+                onTriggered: pageStack.push(aboutPageComponent)
             }
         ]
+    }
+
+    Component {
+        id: aboutPageComponent
+        Kirigami.AboutPage {
+            aboutData: appAboutData
+        }
     }
 
     pageStack.initialPage: Kirigami.Page {

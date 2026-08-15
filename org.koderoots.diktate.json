@@ -25,7 +25,8 @@
         "-DWHISPER_BUILD_SERVER=OFF",
         "-DWHISPER_SDL2=OFF",
         "-DWHISPER_CCACHE=OFF",
-        "-DBUILD_SHARED_LIBS=OFF"
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DGGML_VULKAN=ON"
       ],
       "builddir": true,
       "build-commands": [
@@ -57,7 +58,7 @@
     {
       "name": "diktate",
       "buildsystem": "cmake-ninja",
-      "config-opts": ["-DCMAKE_BUILD_TYPE=Release"],
+      "config-opts": ["-DCMAKE_BUILD_TYPE=Release", "-DDIKTATE_VULKAN=ON"],
       "builddir": true,
       "sources": [
         {
