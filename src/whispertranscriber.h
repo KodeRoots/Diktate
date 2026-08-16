@@ -5,8 +5,12 @@
 #include <QString>
 #include <QThread>
 #include <QMutex>
+#include <QWaitCondition>
+#include <QQueue>
 #include <QStringList>
 #include <QMap>
+#include <thread>
+#include <vector>
 
 #include <whisper.h>
 
@@ -27,6 +31,13 @@ public:
     Q_INVOKABLE bool isModelLoaded() const;
     Q_INVOKABLE void loadModel(const QString &modelPath);
 
+    // Incremental dictation session: speech segments are transcribed as they
+    // arrive, so most of the work is done by the time the user stops speaking.
+    Q_INVOKABLE void beginSession();
+    Q_INVOKABLE void transcribeSegment(const QByteArray &pcmData);
+    Q_INVOKABLE void finishSession();
+    Q_INVOKABLE void cancelSession();
+
     QString currentModelPath() const;
 
     bool useGpu() const;
@@ -45,6 +56,7 @@ public:
 
 Q_SIGNALS:
     void transcriptionComplete(QString text);
+    void partialTranscription(QString text);
     void transcriptionProgress(QString status);
     void errorOccurred(QString message);
     void modelLoaded(QString modelPath);
@@ -54,7 +66,7 @@ Q_SIGNALS:
 
 private:
     struct whisper_context *m_ctx = nullptr;
-    QMutex m_mutex;
+    QMutex m_mutex;  // guards m_ctx and serializes whisper_full calls
     bool m_modelLoaded = false;
     QString m_currentModelPath;
     bool m_useGpu = true;
@@ -62,6 +74,20 @@ private:
     QString m_language = QStringLiteral("auto");  // Default to auto-detect
     void runTranscription(const QString &audioPath);
     void reloadModelIfNeeded();
+
+    // Transcribe float samples with the loaded model. Caller must hold m_mutex.
+    QString runWhisperLocked(const std::vector<float> &samples, bool noContext);
+
+    // Incremental session worker
+    void workerLoop();
+    std::thread m_workerThread;
+    QMutex m_queueMutex;
+    QWaitCondition m_queueCond;
+    QQueue<QByteArray> m_segmentQueue;
+    QStringList m_sessionParts;
+    bool m_stopWorker = false;
+    bool m_finishing = false;
+    bool m_sessionActive = false;
 
     static const QMap<QString, QString> s_languageNames;
 };

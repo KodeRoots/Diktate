@@ -16,6 +16,21 @@
   ],
   "modules": [
     {
+      "name": "spirv-headers",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "builddir": true,
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/KhronosGroup/SPIRV-Headers/archive/refs/tags/vulkan-sdk-1.4.321.0.tar.gz",
+          "sha256": "5bbea925663d4cd2bab23efad53874f2718248a73dcaf9dd21dff8cb48e602fc"
+        }
+      ]
+    },
+    {
       "name": "whisper.cpp",
       "buildsystem": "cmake-ninja",
       "config-opts": [
@@ -35,8 +50,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v1.7.3.tar.gz",
-          "sha256": "a36faa04885b45e4dd27751a37cb54300617717dbd3b7e5ec336f830e051a28c"
+          "url": "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v1.9.2.tar.gz",
+          "sha256": "a6abd064fcca8b85e794d205abf328c522e9451db43a3eadc178b883b7d0e9cd"
         }
       ]
     },

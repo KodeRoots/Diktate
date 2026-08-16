@@ -63,6 +63,12 @@ public:
     void setMode(Mode mode);
 
     /**
+     * Duration of trailing silence that the internal hysteresis keeps the
+     * speech state active before reporting speech end.
+     */
+    static constexpr int silenceHysteresisMs() { return static_cast<int>(SILENCE_FRAMES_THRESHOLD * FRAME_SIZE_MS); }
+
+    /**
      * Check if VAD is properly initialized
      */
     bool isValid() const { return m_handle != nullptr; }

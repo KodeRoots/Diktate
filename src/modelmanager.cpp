@@ -86,24 +86,26 @@ QString ModelManager::modelsDirectory() const
 
 QString ModelManager::getModelFileName(ModelSize size, ModelType type) const
 {
-    QString sizeName;
+    // Quantized models: much smaller downloads and significantly faster CPU inference
+    // with minimal accuracy loss. tiny/base/small have q5_1 on HuggingFace,
+    // medium and large-v3-turbo have q5_0.
+    QString baseName;
+    QString quantSuffix;
     switch (size) {
-        case Tiny: sizeName = QStringLiteral("tiny"); break;
-        case Base: sizeName = QStringLiteral("base"); break;
-        case Small: sizeName = QStringLiteral("small"); break;
-        case Medium: sizeName = QStringLiteral("medium"); break;
-        // Use quantized large-v3-turbo: 5.4x faster than large-v3 with minimal accuracy loss
+        case Tiny: baseName = QStringLiteral("tiny"); quantSuffix = QStringLiteral("-q5_1"); break;
+        case Base: baseName = QStringLiteral("base"); quantSuffix = QStringLiteral("-q5_1"); break;
+        case Small: baseName = QStringLiteral("small"); quantSuffix = QStringLiteral("-q5_1"); break;
+        case Medium: baseName = QStringLiteral("medium"); quantSuffix = QStringLiteral("-q5_0"); break;
+        // large-v3-turbo: 5.4x faster than large-v3 with minimal accuracy loss
         // (809M params, ~7.75% WER vs 1.55B params, ~7.4% WER for large-v3)
-        // q5_0 quantization: ~574MB instead of ~1.6GB, faster load and inference,
-        // fits comfortably in GPU VRAM
-        case Large: sizeName = QStringLiteral("large-v3-turbo-q5_0"); break;
+        case Large: baseName = QStringLiteral("large-v3-turbo"); quantSuffix = QStringLiteral("-q5_0"); break;
     }
 
     // Note: There's no English-only version of the large model
     if (type == EnglishOnly && size != Large) {
-        return QStringLiteral("ggml-%1.en.bin").arg(sizeName);
+        return QStringLiteral("ggml-%1.en%2.bin").arg(baseName, quantSuffix);
     } else {
-        return QStringLiteral("ggml-%1.bin").arg(sizeName);
+        return QStringLiteral("ggml-%1%2.bin").arg(baseName, quantSuffix);
     }
 }
 
@@ -116,10 +118,10 @@ QString ModelManager::getModelDisplayName(ModelSize size, ModelType type) const
 {
     QString sizeName;
     switch (size) {
-        case Tiny: sizeName = i18n("Tiny"); break;
-        case Base: sizeName = i18n("Base"); break;
-        case Small: sizeName = i18n("Small"); break;
-        case Medium: sizeName = i18n("Medium"); break;
+        case Tiny: sizeName = i18n("Tiny (Q5)"); break;
+        case Base: sizeName = i18n("Base (Q5)"); break;
+        case Small: sizeName = i18n("Small (Q5)"); break;
+        case Medium: sizeName = i18n("Medium (Q5)"); break;
         case Large: sizeName = i18n("Large (Turbo Q5)"); break;
     }
 

@@ -124,10 +124,21 @@ WhisperTranscriber::WhisperTranscriber(QObject *parent)
     m_useGpu = settings.value(QStringLiteral("transcriber/useGpu"), true).toBool();
     m_gpuDevice = settings.value(QStringLiteral("transcriber/gpuDevice"), 0).toInt();
     m_language = settings.value(QStringLiteral("transcriber/language"), QStringLiteral("auto")).toString();
+
+    m_workerThread = std::thread(&WhisperTranscriber::workerLoop, this);
 }
 
 WhisperTranscriber::~WhisperTranscriber()
 {
+    {
+        QMutexLocker locker(&m_queueMutex);
+        m_stopWorker = true;
+        m_queueCond.wakeAll();
+    }
+    if (m_workerThread.joinable()) {
+        m_workerThread.join();
+    }
+
     QMutexLocker locker(&m_mutex);
     if (m_ctx) {
         whisper_free(m_ctx);
@@ -244,6 +255,60 @@ QString WhisperTranscriber::currentModelPath() const
     return m_currentModelPath;
 }
 
+QString WhisperTranscriber::runWhisperLocked(const std::vector<float> &samples, bool noContext)
+{
+    if (!m_ctx || samples.empty()) {
+        return {};
+    }
+
+    struct whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+    params.print_progress = false;
+    params.print_special = false;
+    params.print_realtime = false;
+    params.translate = false;
+
+    // Set the language for transcription
+    // "auto" means auto-detect, otherwise use the specified language code
+    QByteArray langBytes = m_language.toUtf8();
+    params.language = langBytes.constData();
+
+    // Short dictation segments are independent utterances: conditioning on
+    // previous text only adds decoder work and risks repetition loops.
+    params.no_context = noContext;
+
+    // Dynamic thread count: use all available cores minus one for responsiveness
+    const int maxThreads = static_cast<int>(std::thread::hardware_concurrency());
+    params.n_threads = std::max(1, maxThreads > 1 ? maxThreads - 1 : maxThreads);
+
+    // Dynamic audio context optimization for short clips (from whisper.cpp issue #1855)
+    // This significantly speeds up transcription of short recordings
+    constexpr int sampleRate = 16000;
+    constexpr int maxAudioCtx = 1500;
+    const int dynamicAudioCtx = std::min(maxAudioCtx,
+        ((maxAudioCtx * static_cast<int>(samples.size())) / (sampleRate * 30)) + 128);
+    params.audio_ctx = dynamicAudioCtx;
+
+    // Suppress blank and non-speech tokens for cleaner output
+    params.suppress_blank = true;
+    params.suppress_nst = true;
+
+    if (whisper_full(m_ctx, params, samples.data(), static_cast<int>(samples.size())) != 0) {
+        return {};
+    }
+
+    QString result;
+    const int n_segments = whisper_full_n_segments(m_ctx);
+    for (int i = 0; i < n_segments; ++i) {
+        const char *text = whisper_full_get_segment_text(m_ctx, i);
+        result += QString::fromUtf8(text);
+    }
+
+    // Remove Whisper special tokens
+    result.remove(QStringLiteral("[BLANK_AUDIO]"));
+
+    return result.trimmed();
+}
+
 void WhisperTranscriber::transcribe(const QString &audioPath)
 {
     if (!m_modelLoaded) {
@@ -253,10 +318,7 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
 
     Q_EMIT transcriptionProgress(i18n("Transcribing..."));
 
-    // Capture the language setting for the async lambda
-    const QString languageCode = m_language;
-
-    QtConcurrent::run([this, audioPath, languageCode]() {
+    QtConcurrent::run([this, audioPath]() {
         QFile audioFile(audioPath);
         if (!audioFile.open(QIODevice::ReadOnly)) {
             Q_EMIT errorOccurred(i18n("Failed to open audio file"));
@@ -280,60 +342,20 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
             floatSamples[i] = static_cast<float>(samples[i]) / 32768.0f;
         }
 
-        struct whisper_context *ctx;
+        // m_mutex is held during inference: serializes with the session worker
+        // and prevents the context from being freed mid-transcription
+        QString result;
         {
             QMutexLocker locker(&m_mutex);
-            ctx = m_ctx;
+            result = runWhisperLocked(floatSamples, false);
         }
 
-        if (!ctx) {
-            Q_EMIT errorOccurred(i18n("Whisper context not available"));
-            return;
-        }
-
-        struct whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-        params.print_progress = false;
-        params.print_special = false;
-        params.print_realtime = false;
-        params.translate = false;
-
-        // Set the language for transcription
-        // "auto" means auto-detect, otherwise use the specified language code
-        QByteArray langBytes = languageCode.toUtf8();
-        params.language = langBytes.constData();
-
-        // Dynamic thread count: use all available cores minus one for responsiveness
-        const int maxThreads = static_cast<int>(std::thread::hardware_concurrency());
-        params.n_threads = std::max(1, maxThreads > 1 ? maxThreads - 1 : maxThreads);
-
-        // Dynamic audio context optimization for short clips (from whisper.cpp issue #1855)
-        // This significantly speeds up transcription of short recordings
-        constexpr int sampleRate = 16000;
-        constexpr int maxAudioCtx = 1500;
-        const int dynamicAudioCtx = std::min(maxAudioCtx,
-            ((maxAudioCtx * sampleCount) / (sampleRate * 30)) + 128);
-        params.audio_ctx = dynamicAudioCtx;
-
-        // Suppress blank and non-speech tokens for cleaner output
-        params.suppress_blank = true;
-        params.suppress_non_speech_tokens = true;
-
-        if (whisper_full(ctx, params, floatSamples.data(), sampleCount) != 0) {
+        if (result.isEmpty()) {
             Q_EMIT errorOccurred(i18n("Failed to transcribe audio"));
             return;
         }
 
-        QString result;
-        const int n_segments = whisper_full_n_segments(ctx);
-        for (int i = 0; i < n_segments; ++i) {
-            const char *text = whisper_full_get_segment_text(ctx, i);
-            result += QString::fromUtf8(text);
-        }
-
-        // Remove Whisper special tokens
-        result.remove(QStringLiteral("[BLANK_AUDIO]"));
-
-        Q_EMIT transcriptionComplete(result.trimmed());
+        Q_EMIT transcriptionComplete(result);
 
         QMetaObject::invokeMethod(qApp, []() {
             KNotification::event(QStringLiteral("transcriptionComplete"),
@@ -342,6 +364,110 @@ void WhisperTranscriber::transcribe(const QString &audioPath)
                 QStringLiteral("org.koderoots.diktate"));
         });
     });
+}
+
+void WhisperTranscriber::beginSession()
+{
+    QMutexLocker locker(&m_queueMutex);
+    m_segmentQueue.clear();
+    m_sessionParts.clear();
+    m_finishing = false;
+    m_sessionActive = true;
+}
+
+void WhisperTranscriber::transcribeSegment(const QByteArray &pcmData)
+{
+    if (!m_modelLoaded) {
+        return;
+    }
+
+    QMutexLocker locker(&m_queueMutex);
+    if (!m_sessionActive || m_finishing) {
+        return;
+    }
+    m_segmentQueue.enqueue(pcmData);
+    m_queueCond.wakeOne();
+}
+
+void WhisperTranscriber::finishSession()
+{
+    QMutexLocker locker(&m_queueMutex);
+    if (!m_sessionActive) {
+        return;
+    }
+    m_finishing = true;
+    m_queueCond.wakeAll();
+}
+
+void WhisperTranscriber::cancelSession()
+{
+    QMutexLocker locker(&m_queueMutex);
+    m_segmentQueue.clear();
+    m_sessionParts.clear();
+    m_finishing = false;
+    m_sessionActive = false;
+}
+
+void WhisperTranscriber::workerLoop()
+{
+    while (true) {
+        QByteArray segment;
+        {
+            QMutexLocker locker(&m_queueMutex);
+            while (m_segmentQueue.isEmpty() && !m_stopWorker && !m_finishing) {
+                m_queueCond.wait(&m_queueMutex);
+            }
+
+            if (m_stopWorker) {
+                return;
+            }
+
+            if (m_segmentQueue.isEmpty() && m_finishing) {
+                m_finishing = false;
+                m_sessionActive = false;
+                const QString text = m_sessionParts.join(QStringLiteral(" ")).trimmed();
+                m_sessionParts.clear();
+                Q_EMIT transcriptionComplete(text);
+                continue;
+            }
+
+            segment = m_segmentQueue.dequeue();
+        }
+
+        // Convert Int16 samples to normalized float [-1.0, 1.0]
+        const qint16 *samples = reinterpret_cast<const qint16 *>(segment.constData());
+        const int sampleCount = segment.size() / sizeof(qint16);
+
+        std::vector<float> floatSamples(sampleCount);
+        for (int i = 0; i < sampleCount; ++i) {
+            floatSamples[i] = static_cast<float>(samples[i]) / 32768.0f;
+        }
+
+        QString text;
+        bool failed = false;
+        {
+            QMutexLocker locker(&m_mutex);
+            if (!m_ctx) {
+                failed = true;
+            } else {
+                text = runWhisperLocked(floatSamples, true);
+                failed = text.isEmpty();
+            }
+        }
+
+        if (failed) {
+            Q_EMIT errorOccurred(i18n("Failed to transcribe audio segment"));
+            continue;
+        }
+
+        {
+            QMutexLocker locker(&m_queueMutex);
+            if (m_sessionActive) {
+                m_sessionParts.append(text);
+            }
+        }
+        Q_EMIT partialTranscription(text);
+    }
 }
 
 bool WhisperTranscriber::isModelLoaded() const

@@ -101,7 +101,7 @@ else()
     FetchContent_Declare(
         whisper
         GIT_REPOSITORY https://github.com/ggml-org/whisper.cpp.git
-        GIT_TAG        v1.7.3
+        GIT_TAG        v1.9.2
     )
 
     FetchContent_MakeAvailable(whisper)

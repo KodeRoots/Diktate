@@ -37,6 +37,10 @@ private:
   WhisperTranscriber *m_transcriber;
   YdotoolWriter *m_writer;
   bool m_active = false;
+  // True while a recording/session initiated by the dictation path (tray,
+  // global shortcut) is in progress. Recordings started from the app window
+  // must not activate dictation (no ydotool typing).
+  bool m_ownSession = false;
 };
 
 #endif // DICTATIONCONTROLLER_H

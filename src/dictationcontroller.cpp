@@ -12,18 +12,33 @@ DictationController::DictationController(AudioRecorder *recorder,
     : QObject(parent), m_recorder(recorder), m_transcriber(transcriber),
       m_writer(writer) {
   connect(m_recorder, &AudioRecorder::recordingStarted, this, [this]() {
+    // Only take over recordings initiated by the dictation path (tray /
+    // global shortcut). Recordings started from the app window are handled
+    // entirely by the QML batch flow.
+    if (!m_ownSession) {
+      return;
+    }
     setActive(true);
     notify(QStringLiteral("dictationListening"), i18n("Listening..."));
+    m_transcriber->beginSession();
   });
 
+  connect(m_recorder, &AudioRecorder::segmentReady, this,
+          [this](const QByteArray &pcmData) {
+            if (!m_active) {
+              return;
+            }
+            m_transcriber->transcribeSegment(pcmData);
+          });
+
   connect(m_recorder, &AudioRecorder::recordingFinished, this,
-          [this](const QString &tempFilePath) {
+          [this](const QString &) {
             if (!m_active) {
               return;
             }
             notify(QStringLiteral("dictationTranscribing"),
                    i18n("Transcribing..."));
-            m_transcriber->transcribe(tempFilePath);
+            m_transcriber->finishSession();
           });
 
   connect(m_recorder, &AudioRecorder::errorOccurred, this,
@@ -35,6 +50,7 @@ DictationController::DictationController(AudioRecorder *recorder,
               return;
             }
             setActive(false);
+            m_ownSession = false;
             const QString trimmed = text.trimmed();
             if (trimmed.isEmpty()) {
               notify(QStringLiteral("dictationError"),
@@ -73,6 +89,7 @@ void DictationController::start() {
     return;
   }
 
+  m_ownSession = true;
   m_recorder->startRecording();
 }
 
@@ -88,6 +105,9 @@ void DictationController::handleError(const QString &message) {
   if (m_active) {
     setActive(false);
   }
+
+  m_ownSession = false;
+  m_transcriber->cancelSession();
 
   notify(QStringLiteral("dictationError"), message);
   Q_EMIT errorOccurred(message);

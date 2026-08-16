@@ -91,12 +91,13 @@ void AudioRecorder::startRecording()
     m_hasDetectedVoice = false;
     m_lastVoiceTime.start();
     m_silenceTimer->start();
-    
-    // Reset VAD state for new recording
+
+    // Reset VAD and segmentation state for new recording
     if (m_vad && m_vad->isValid()) {
         m_vad->reset();
     }
-    
+    resetSegmentation();
+
     Q_EMIT recordingStarted();
 }
 
@@ -107,6 +108,13 @@ void AudioRecorder::stopRecording()
     }
 
     m_silenceTimer->stop();
+
+    // Flush any in-progress speech segment so it gets transcribed
+    if (m_vad && m_vad->isValid()) {
+        emitSegment(true);
+    } else if (m_hasDetectedVoice && m_audioData.size() >= MIN_SEGMENT_BYTES) {
+        Q_EMIT segmentReady(m_audioData);
+    }
 
     if (m_audioSource) {
         m_audioSource->stop();
@@ -122,21 +130,96 @@ bool AudioRecorder::isRecording() const
 
 void AudioRecorder::processAudioData(const QByteArray &data)
 {
-    bool voiceDetected = false;
-    
-    // Use WebRTC VAD if available (more accurate than RMS)
-    if (m_vad && m_vad->isValid()) {
-        voiceDetected = m_vad->isSpeech(data);
-    } else {
-        // Fallback to RMS threshold if VAD not available
+    if (!m_vad || !m_vad->isValid()) {
+        // Without VAD there is no segmentation; the whole buffer is emitted
+        // as a single segment when recording stops.
         qint16 rms = calculateRMS(data);
-        voiceDetected = (rms > SILENCE_THRESHOLD_RMS);
+        if (rms > SILENCE_THRESHOLD_RMS) {
+            m_hasDetectedVoice = true;
+            m_lastVoiceTime.restart();
+        }
+        return;
     }
 
-    if (voiceDetected) {
+    m_pendingBytes.append(data);
+    while (m_pendingBytes.size() >= FRAME_BYTES) {
+        QByteArray frame = m_pendingBytes.left(FRAME_BYTES);
+        m_pendingBytes.remove(0, FRAME_BYTES);
+        processFrame(frame);
+    }
+}
+
+void AudioRecorder::processFrame(const QByteArray &frame)
+{
+    // Feeding exactly one 10ms frame makes the returned state correspond
+    // to this frame (VAD applies hysteresis internally).
+    const bool speech = m_vad->isSpeech(frame);
+
+    if (speech) {
         m_hasDetectedVoice = true;
         m_lastVoiceTime.restart();
     }
+
+    if (!m_inSegment) {
+        // Keep a small pre-roll so word onsets are not clipped
+        m_preRoll.append(frame);
+        if (m_preRoll.size() > PRE_ROLL_BYTES) {
+            m_preRoll.remove(0, m_preRoll.size() - PRE_ROLL_BYTES);
+        }
+
+        if (speech) {
+            m_inSegment = true;
+            m_segment = m_preRoll;
+            m_preRoll.clear();
+        }
+        return;
+    }
+
+    m_segment.append(frame);
+
+    if (speech) {
+        if (m_segment.size() >= MAX_SEGMENT_BYTES) {
+            // Safety cap: split long uninterrupted speech so transcription
+            // of this chunk can start while recording continues.
+            emitSegment(false);
+            // Stay in segment mode so following frames start a fresh
+            // segment immediately (no pre-roll, avoiding duplicated audio).
+            m_inSegment = true;
+        }
+    } else {
+        // VAD flipped to silence: a natural pause ended the sentence
+        emitSegment(true);
+    }
+}
+
+void AudioRecorder::emitSegment(bool trimTrailingSilence)
+{
+    if (!m_inSegment) {
+        return;
+    }
+
+    m_inSegment = false;
+
+    if (trimTrailingSilence) {
+        // The VAD silence hysteresis already included trailing silence in the
+        // segment; trim it down to a small natural padding.
+        const int hysteresisBytes = VAD::silenceHysteresisMs() * 32; // 32 bytes/ms at 16kHz int16 mono
+        const int trimBytes = std::max(0, hysteresisBytes - TAIL_PADDING_BYTES);
+        m_segment.chop(std::min(trimBytes, static_cast<int>(m_segment.size())));
+    }
+
+    if (m_segment.size() >= MIN_SEGMENT_BYTES) {
+        Q_EMIT segmentReady(m_segment);
+    }
+    m_segment.clear();
+}
+
+void AudioRecorder::resetSegmentation()
+{
+    m_pendingBytes.clear();
+    m_preRoll.clear();
+    m_segment.clear();
+    m_inSegment = false;
 }
 
 qint16 AudioRecorder::calculateRMS(const QByteArray &data)
@@ -178,7 +261,8 @@ void AudioRecorder::cleanup()
     }
 
     m_audioData.clear();
-    
+    resetSegmentation();
+
     // Reset VAD state
     if (m_vad && m_vad->isValid()) {
         m_vad->reset();

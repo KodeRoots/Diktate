@@ -158,7 +158,6 @@ Kirigami.ApplicationWindow {
                 onTriggered: {
                     if (audioRecorder.isRecording()) {
                         audioRecorder.stopRecording();
-                        transcriber.transcribe(tempFilePath);
                     } else {
                         audioRecorder.startRecording();
                     }
@@ -172,6 +171,11 @@ Kirigami.ApplicationWindow {
                 recordAction.text = i18n("Recording...");
                 recordAction.enabled = false;
                 uploadAction.enabled = false;
+                // Keep focus away from the Record button: in tray dictation
+                // mode ydotool types at the cursor, and typed spaces/enter
+                // would re-activate a focused Record button, starting a new
+                // unwanted recording.
+                textArea.forceActiveFocus();
             }
 
             function onRecordingFinished(filePath) {
@@ -203,6 +207,7 @@ Kirigami.ApplicationWindow {
             target: transcriber
             function onTranscriptionComplete(text) {
                 textArea.text = text;
+                textArea.forceActiveFocus();
                 textArea.placeholderText = i18n("Press Record to start...");
                 recordAction.text = i18n("Record");
                 recordAction.enabled = true;
